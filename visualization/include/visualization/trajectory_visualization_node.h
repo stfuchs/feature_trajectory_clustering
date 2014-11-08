@@ -38,8 +38,9 @@ private:
   ros::NodeHandle nh_;
   ros::Subscriber sub_alvar_;
   ros::Publisher pub_path_;
-  std::map<int,visualization_msgs::Marker> traj_;
-  std::map<int,std_msgs::ColorRGBA> colors_;
+  std::map<int,visualization_msgs::Marker> traj_path_;
+  std::map<int,visualization_msgs::Marker> traj_points_;
+  //std::map<int,std_msgs::ColorRGBA> colors_;
 };
 
 #endif
