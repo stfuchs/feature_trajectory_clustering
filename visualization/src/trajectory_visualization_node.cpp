@@ -14,7 +14,7 @@
 void TrajectoryVisualizationNode::init()
 {
   ROS_INFO("Subscribing to ar_pose_marker");
-  sub_alvar_ = nh_.subscribe("ar_pose_marker", 10, &TrajectoryVisualizationNode::callback,this);
+  sub_alvar_ = nh_.subscribe("ar_pose_marker", 100, &TrajectoryVisualizationNode::callback,this);
   pub_path_ = nh_.advertise<visualization_msgs::MarkerArray>("trajectory_marker", 1);
 }
 

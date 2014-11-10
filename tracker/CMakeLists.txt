@@ -6,6 +6,8 @@ project(tracker)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   ar_track_alvar
+  pcl_ros
+  OpenCV
 )
 
 ## System dependencies are found with CMake's conventions
@@ -78,9 +80,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES tracker
-#  CATKIN_DEPENDS ar_track_alvar
+  CATKIN_DEPENDS ar_track_alvar pcl_ros
 #  DEPENDS system_lib
 )
 
@@ -90,27 +92,30 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
 # add_library(tracker
 #   src/${PROJECT_NAME}/tracker.cpp
+# 
 # )
 
 ## Declare a cpp executable
-# add_executable(tracker_node src/tracker_node.cpp)
+add_executable(lucas_kanade_tracker src/lucas_kanade_tracker.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(tracker_node tracker_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(tracker_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(lucas_kanade_tracker
+   ${catkin_LIBRARIES}
+#   ${OpenCV_LIBRARIES}
+)
 
 #############
 ## Install ##
