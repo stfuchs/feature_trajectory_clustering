@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>tracker</name>
+  <name>mlr_tracking</name>
   <version>0.0.0</version>
   <description>The tracker package</description>
 
@@ -42,10 +42,11 @@
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>ar_track_alvar</build_depend>
   <build_depend>pcl_ros</build_depend>
+  <build_depend>mlr_msgs</build_depend>
 
   <run_depend>ar_track_alvar</run_depend>
   <run_depend>pcl_ros</run_depend>
-
+  <run_depend>mlr_msgs</run_depend>
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

@@ -8,8 +8,8 @@
  *         for visualization in rviz.
  */
 
-#include "visualization/trajectory_visualization_node.h"
-#include "visualization/utils.h"
+#include "mlr_visualization/trajectory_visualization_node.h"
+#include "mlr_visualization/utils.h"
 
 void TrajectoryVisualizationNode::init()
 {

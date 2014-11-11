@@ -1,11 +1,14 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(visualization)
+project(mlr_tracking)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   ar_track_alvar
+  pcl_ros
+  OpenCV
+  mlr_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -79,8 +82,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS include
-#  LIBRARIES visualization
-  CATKIN_DEPENDS ar_track_alvar
+#  LIBRARIES tracker
+  CATKIN_DEPENDS ar_track_alvar pcl_ros
 #  DEPENDS system_lib
 )
 
@@ -93,23 +96,26 @@ catkin_package(
 include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
-# add_library(visualization
-#   src/${PROJECT_NAME}/visualization.cpp
+# add_library(tracker
+#   src/${PROJECT_NAME}/tracker.cpp
+# 
 # )
 
 ## Declare a cpp executable
-add_executable(trajectory_visualization_node src/trajectory_visualization_node.cpp)
+add_executable(lucas_kanade_tracker src/lucas_kanade_tracker.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(visualization_node visualization_generate_messages_cpp)
+# add_dependencies(tracker_node tracker_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(trajectory_visualization_node
+target_link_libraries(lucas_kanade_tracker
    ${catkin_LIBRARIES}
+#   ${OpenCV_LIBRARIES}
 )
 
 #############
@@ -127,7 +133,7 @@ target_link_libraries(trajectory_visualization_node
 # )
 
 ## Mark executables and/or libraries for installation
-# install(TARGETS visualization visualization_node
+# install(TARGETS tracker tracker_node
 #   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
@@ -152,7 +158,7 @@ target_link_libraries(trajectory_visualization_node
 #############
 
 ## Add gtest based cpp test target and link libraries
-# catkin_add_gtest(${PROJECT_NAME}-test test/test_visualization.cpp)
+# catkin_add_gtest(${PROJECT_NAME}-test test/test_tracker.cpp)
 # if(TARGET ${PROJECT_NAME}-test)
 #   target_link_libraries(${PROJECT_NAME}-test ${PROJECT_NAME})
 # endif()

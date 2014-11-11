@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>visualization</name>
+  <name>mlr_visualization</name>
   <version>0.0.0</version>
   <description>The visualization package</description>
 

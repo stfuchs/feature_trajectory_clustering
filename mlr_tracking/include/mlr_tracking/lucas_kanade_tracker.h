@@ -65,7 +65,7 @@ private:
   std::string input_topic_;
   cv::Mat prev_gray_;
   std::vector<cv::Point2f> features_[2];
-
+  
 };
 
 #endif

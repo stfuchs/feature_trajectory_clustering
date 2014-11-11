@@ -9,8 +9,7 @@
  */
 
 
-#include "tracker/lucas_kanade_tracker.h"
-
+#include "mlr_tracking/lucas_kanade_tracker.h"
 
 void LucasKanadeTrackerNode::init()
 {
@@ -38,8 +37,7 @@ void LucasKanadeTrackerNode::callback(const PointCloudConstPtr& pc_msg)
     cv::goodFeaturesToTrack(gray_image, features_[1], 500, 0.01, 10, cv::Mat(), 3, false, 0.04);
     // subpixel accuracy fo corners:
     // image_in, corners_in_out, win_size, zero_zone, termination_criteria
-
-    //cv::cornerSubPix(gray_image, features_[1], cv::Size(10,10), cv::Size(-1,-1), termcrit);
+    cv::cornerSubPix(gray_image, features_[1], cv::Size(10,10), cv::Size(-1,-1), termcrit);
     ROS_INFO("Initialized new features: %zu",features_[1].size());
   }
 
@@ -53,6 +51,7 @@ void LucasKanadeTrackerNode::callback(const PointCloudConstPtr& pc_msg)
     cv::calcOpticalFlowPyrLK(prev_gray_, gray_image, features_[0], features_[1],
                              status, err, cv::Size(31,31), 3, termcrit, 0, 0.001);
 
+    /*
     size_t i,k;
     for (i=k=0; i<features_[1].size(); ++i)
     {
@@ -61,7 +60,7 @@ void LucasKanadeTrackerNode::callback(const PointCloudConstPtr& pc_msg)
     }
     features_[1].resize(k);
     ROS_INFO("Tracked features: %zu",k);
-
+    */
     if(true)
     {
       cv::Mat image;
