@@ -18,6 +18,7 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <visualization_msgs/Marker.h>
 #include <ar_track_alvar/AlvarMarkers.h>
+#include <mlr_msgs/TrajectoryPointUpdateArray.h>
 
 class TrajectoryVisualizationNode
 {
@@ -30,13 +31,18 @@ public:
 
   void init();
 
-  void callback(const ar_track_alvar::AlvarMarkers& alvar_markers);
+  void callback_alvar(const ar_track_alvar::AlvarMarkers& alvar_markers);
+
+  void callback_lk(const mlr_msgs::TrajectoryPointUpdateArray& update_array);
+
+  void createNewMarker(int id, const std::string frame_id, const geometry_msgs::Point& point);
 
   inline bool ok() { return nh_.ok(); }
 
 private:
   ros::NodeHandle nh_;
   ros::Subscriber sub_alvar_;
+  ros::Subscriber sub_lk_;
   ros::Publisher pub_path_;
   std::map<int,visualization_msgs::Marker> traj_path_;
   std::map<int,visualization_msgs::Marker> traj_points_;

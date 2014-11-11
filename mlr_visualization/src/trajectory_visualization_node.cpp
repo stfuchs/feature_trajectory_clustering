@@ -14,11 +14,56 @@
 void TrajectoryVisualizationNode::init()
 {
   ROS_INFO("Subscribing to ar_pose_marker");
-  sub_alvar_ = nh_.subscribe("ar_pose_marker", 100, &TrajectoryVisualizationNode::callback,this);
+  sub_alvar_ = nh_.subscribe(
+    "ar_pose_marker", 100, &TrajectoryVisualizationNode::callback_alvar,this);
+  ROS_INFO("Subscribing to lr_points");
+  sub_lk_ = nh_.subscribe(
+    "lk_points", 100, &TrajectoryVisualizationNode::callback_lk,this);
+
   pub_path_ = nh_.advertise<visualization_msgs::MarkerArray>("trajectory_marker", 1);
 }
 
-void TrajectoryVisualizationNode::callback(const ar_track_alvar::AlvarMarkers& alvar_markers)
+void TrajectoryVisualizationNode::createNewMarker(int id, const std::string frame_id,
+                                                  const geometry_msgs::Point& point)
+{
+  Visualization::Utils::ColorRGB c;
+  Visualization::Utils::generateColor(id,c);
+
+  visualization_msgs::Marker marker;
+  marker.header.frame_id = frame_id;//"camera_rgb_optical_frame";
+  marker.header.stamp = ros::Time();
+  marker.ns = "trajectory_line";
+  marker.id = id;
+  marker.type = visualization_msgs::Marker::LINE_STRIP;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.pose.position.x = 0;
+  marker.pose.position.y = 0;
+  marker.pose.position.z = 0;
+  marker.pose.orientation.x = 0.0;
+  marker.pose.orientation.y = 0.0;
+  marker.pose.orientation.z = 0.0;
+  marker.pose.orientation.w = 1.0;
+  marker.scale.x = .005;
+  marker.scale.y = 0.1;
+  marker.scale.z = 0.1;
+  marker.color.a = 1.;
+  marker.color.r = float(c.r)/255.;
+  marker.color.g = float(c.g)/255.;
+  marker.color.b = float(c.b)/255.;
+  marker.points.push_back(point);
+  traj_path_.insert(std::make_pair(id,marker));
+
+  marker.ns = "trajectory_point";
+  marker.type = visualization_msgs::Marker::POINTS;
+  marker.scale.x = .008;
+  marker.scale.y = .008;
+  marker.color.r = 1.;
+  marker.color.g = 1.;
+  marker.color.b = 1.;
+  traj_points_.insert(std::make_pair(id,marker));
+}
+
+void TrajectoryVisualizationNode::callback_alvar(const ar_track_alvar::AlvarMarkers& alvar_markers)
 {
   unsigned int n = alvar_markers.markers.size();
   if (n==0) return;
@@ -28,7 +73,7 @@ void TrajectoryVisualizationNode::callback(const ar_track_alvar::AlvarMarkers& a
   //  alvar_markers.header.stamp.nsec);
   visualization_msgs::MarkerArray v_markers;
 
-  for(unsigned int i = 0; i<n; ++i)
+  for(unsigned int i=0; i<n; ++i)
   {
     int id = alvar_markers.markers[i].id;
     std::string frame_id = alvar_markers.markers[i].header.frame_id;
@@ -37,41 +82,36 @@ void TrajectoryVisualizationNode::callback(const ar_track_alvar::AlvarMarkers& a
     
     if(traj_path_.count(id)==0)
     {
-      Visualization::Utils::ColorRGB c;
-      Visualization::Utils::generateColor(id,c);
+      createNewMarker(id,frame_id,point);
+    }
+    else
+    {
+      traj_path_[id].points.push_back(point);
+      traj_points_[id].points.push_back(point);
+      v_markers.markers.push_back(traj_path_[id]);
+      v_markers.markers.push_back(traj_points_[id]);
+    }
+  }
+  pub_path_.publish(v_markers);
+}
 
-      visualization_msgs::Marker marker;
-      marker.header.frame_id = frame_id;//"camera_rgb_optical_frame";
-      marker.header.stamp = ros::Time();
-      marker.ns = "trajectory_line";
-      marker.id = id;
-      marker.type = visualization_msgs::Marker::LINE_STRIP;
-      marker.action = visualization_msgs::Marker::ADD;
-      marker.pose.position.x = 0;
-      marker.pose.position.y = 0;
-      marker.pose.position.z = 0;
-      marker.pose.orientation.x = 0.0;
-      marker.pose.orientation.y = 0.0;
-      marker.pose.orientation.z = 0.0;
-      marker.pose.orientation.w = 1.0;
-      marker.scale.x = .005;
-      marker.scale.y = 0.1;
-      marker.scale.z = 0.1;
-      marker.color.a = 1.;
-      marker.color.r = float(c.r)/255.;
-      marker.color.g = float(c.g)/255.;
-      marker.color.b = float(c.b)/255.;
-      marker.points.push_back(point);
-      traj_path_.insert(std::make_pair(id,marker));
+void TrajectoryVisualizationNode::callback_lk(
+  const mlr_msgs::TrajectoryPointUpdateArray& update_array)
+{
+  unsigned int n = update_array.points.size();
+  ROS_INFO("Received %i lucas kanade updates",n);
 
-      marker.ns = "trajectory_point";
-      marker.type = visualization_msgs::Marker::POINTS;
-      marker.scale.x = .01;
-      marker.scale.y = .01;
-      marker.color.r = 1.;
-      marker.color.g = 1.;
-      marker.color.b = 1.;
-      traj_points_.insert(std::make_pair(id,marker));
+  visualization_msgs::MarkerArray v_markers;
+
+  for(unsigned int i=0; i<n; ++i)
+  {
+    int id = update_array.points[i].id;
+    std::string frame_id = update_array.points[i].header.frame_id;
+    geometry_msgs::Point point = update_array.points[i].point;
+    
+    if(traj_path_.count(id)==0)
+    {
+      createNewMarker(id,frame_id,point);
     }
     else
     {

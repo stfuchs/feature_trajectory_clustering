@@ -15,18 +15,18 @@ void LucasKanadeTrackerNode::init()
 {
   ROS_INFO("Subscribing to %s", input_topic_.c_str());
   sub_ = nh_.subscribe(input_topic_,1,&LucasKanadeTrackerNode::callback,this);
-  pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ> >("lk_points",1);
-  img_pub_ = it_.advertise("/camera/image/mono",1);
+  pub_ = nh_.advertise<mlr_msgs::TrajectoryPointUpdateArray>("lk_points",1);
+  img_pub_ = it_.advertise("lk_image",1);
 }
 
 void LucasKanadeTrackerNode::callback(const PointCloudConstPtr& pc_msg)
 {
   // non-copy map to rgb data in point cloud:
   const void* pmsg = reinterpret_cast<const void*>(&(pc_msg->points[0]))+16;
-  const cv::Mat color_image(480*640,1,CV_8UC3, const_cast<void*>(pmsg),32);
+  const cv::Mat image_map(480*640,1,CV_8UC3, const_cast<void*>(pmsg),32);
   // copy to gray image:
   cv::Mat gray_image;
-  cv::cvtColor(color_image, gray_image, cv::COLOR_BGR2GRAY);
+  cv::cvtColor(image_map, gray_image, cv::COLOR_BGR2GRAY);
   gray_image.rows = 480; gray_image.cols = 640; gray_image.step[0] = 640;
 
   cv::TermCriteria termcrit(cv::TermCriteria::COUNT|cv::TermCriteria::EPS,20,0.03);
@@ -63,18 +63,9 @@ void LucasKanadeTrackerNode::callback(const PointCloudConstPtr& pc_msg)
     */
     if(true)
     {
-      cv::Mat image;
-      color_image.copyTo(image);
-      image.rows = 480;
-      image.cols = 640;
-      image.step[0] = 3*640;
-
-      for (size_t i=0; i<features_[1].size(); ++i)
-        cv::circle( image, features_[1][i], 3, cv::Scalar(0,255,0), -1, 8);
-
-      sensor_msgs::ImagePtr img_msg = cv2msg(image,"bgr8");
-      img_pub_.publish(img_msg);
+      publishFeatureImage(image_map, features_[1]);
     }
+    publishTrajectoryUpdates(pc_msg);
   }
   //typename pcl::PointCloud<pcl::PointXYZ>::Ptr pc_out(new pcl::PointCloud<pcl::PointXYZ>);
   //pc_out->header = pc_msg->header;
@@ -82,6 +73,57 @@ void LucasKanadeTrackerNode::callback(const PointCloudConstPtr& pc_msg)
 
   std::swap(features_[1], features_[0]);
   cv::swap(prev_gray_, gray_image); 
+}
+
+void LucasKanadeTrackerNode::publishFeatureImage(const cv::Mat& image_map,
+                                                 const std::vector<cv::Point2f>& features)
+{
+  // create a copy from the image map and reshape
+  cv::Mat image;
+  image_map.copyTo(image);
+  image.rows = 480;
+  image.cols = 640;
+  image.step[0] = 3*640;
+
+  for (size_t i=0; i<features.size(); ++i)
+    cv::circle( image, features[i], 3, cv::Scalar(0,255,0), -1, 8);
+
+  sensor_msgs::ImagePtr img_msg = cv2msg(image,"bgr8");
+  img_pub_.publish(img_msg);
+}
+
+void LucasKanadeTrackerNode::publishTrajectoryUpdates(const PointCloudConstPtr& pc)
+{
+  mlr_msgs::TrajectoryPointUpdateArray update_array;
+  mlr_msgs::TrajectoryPointUpdate update;
+  update.header.stamp = ros::Time::now();
+  update.header.frame_id = pc->header.frame_id;
+  bool need_init;
+  if(need_init = depth_jump_.empty())
+  {
+    depth_jump_.resize(features_[1].size());
+  }
+  for(size_t i=0; i<features_[1].size(); ++i)
+  {
+    if(cv::norm(features_[0][i] - features_[1][i]) > 1)
+    {
+      size_t idx = round(features_[1][i].x) + round(features_[1][i].y)*pc->width;
+      update.point.z = pc->points[idx].z;
+      if(update.point.z == update.point.z) // nan check
+      {
+        if(need_init || (depth_jump_[i] - update.point.z) < .001)
+        {
+          depth_jump_[i] = update.point.z;
+          update.point.x = pc->points[idx].x;
+          update.point.y = pc->points[idx].y;
+          update.id = i;
+          update_array.points.push_back(update);
+        }
+      }
+    }
+  }
+  if(!update_array.points.empty())
+    pub_.publish(update_array);
 }
 
 

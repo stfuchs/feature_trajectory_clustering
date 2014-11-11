@@ -19,7 +19,10 @@
 #include <image_transport/image_transport.h>
 
 #include <opencv2/video/tracking.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+
+#include <mlr_msgs/TrajectoryPointUpdateArray.h>
 
 class LucasKanadeTrackerNode
 {
@@ -42,12 +45,11 @@ public:
 
   void callback(const PointCloudConstPtr& pc_msg);
 
-  inline pcl::PointXYZ projectOnPointCloud(const cv::Point2f& p2d, const PointCloudConstPtr& pc)
-  {
-    unsigned int idx = round(p2d.x) + round(p2d.y)*640;
-    std::cout << idx<<", X:" << p2d.x << " Y:"<<p2d.y<<std::endl;
-    return pcl::PointXYZ(pc->points[idx].x,pc->points[idx].y,pc->points[idx].z);
-  }
+  void publishFeatureImage(const cv::Mat& image_map, const std::vector<cv::Point2f>& features);
+
+  void publishTrajectoryUpdates(const PointCloudConstPtr& pc);
+
+
   inline sensor_msgs::ImagePtr cv2msg(const cv::Mat& mat, const std::string& encoding)
   {
     return cv_bridge::CvImage(std_msgs::Header(),encoding,mat).toImageMsg();
@@ -65,6 +67,7 @@ private:
   std::string input_topic_;
   cv::Mat prev_gray_;
   std::vector<cv::Point2f> features_[2];
+  std::vector<float> depth_jump_;
   
 };
 
