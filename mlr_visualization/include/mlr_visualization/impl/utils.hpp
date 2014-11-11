@@ -67,7 +67,13 @@ void Visualization::Utils::generateColor(int position, ColorRGB& out)
   if (position > 24)
   {
     v = 75;
-    s = 10;
+    s = 100;
+  }
+  if (position > 36)
+  {
+    h = rand()%360;
+    v = 25+rand()%75;
+    s = 25+rand()%75;
   }
   ColorHSV hsv = {h,s,v};
   hsv2rgb(hsv,out);
