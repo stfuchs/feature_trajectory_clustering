@@ -1,0 +1,1 @@
+mlr_msgs/TrajectoryPointUpdate[] points
