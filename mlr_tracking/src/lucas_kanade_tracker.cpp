@@ -86,7 +86,7 @@ void LucasKanadeTrackerNode::publishFeatureImage(const cv::Mat& image_map,
   image.step[0] = 3*640;
 
   for (size_t i=0; i<features.size(); ++i)
-    cv::circle( image, features[i], 3, cv::Scalar(0,255,0), -1, 8);
+    cv::circle( image, features[i], 6, cv::Scalar(0,255,0), -1, 8);
 
   sensor_msgs::ImagePtr img_msg = cv2msg(image,"bgr8");
   img_pub_.publish(img_msg);

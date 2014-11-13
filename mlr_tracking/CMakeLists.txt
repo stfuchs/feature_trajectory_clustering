@@ -7,8 +7,8 @@ project(mlr_tracking)
 find_package(catkin REQUIRED COMPONENTS
   ar_track_alvar
   pcl_ros
-  OpenCV
   mlr_msgs
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -97,6 +97,7 @@ include_directories(include)
 include_directories(
   ${catkin_INCLUDE_DIRS}
   ${OpenCV_INCLUDE_DIRS}
+  ${pcl_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -107,6 +108,7 @@ include_directories(
 
 ## Declare a cpp executable
 add_executable(lucas_kanade_tracker src/lucas_kanade_tracker.cpp)
+add_executable(depth_lucas_kanade_tracker src/experimental_depth_lucas_kanade_tracker.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -114,8 +116,12 @@ add_executable(lucas_kanade_tracker src/lucas_kanade_tracker.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(lucas_kanade_tracker
-   ${catkin_LIBRARIES}
+  ${catkin_LIBRARIES}
 #   ${OpenCV_LIBRARIES}
+)
+
+target_link_libraries(depth_lucas_kanade_tracker
+  ${catkin_LIBRARIES}
 )
 
 #############

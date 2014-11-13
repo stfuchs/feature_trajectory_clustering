@@ -1,0 +1,19 @@
+# setup pcl from trunk using catkin
+
+    mkdir -p pcl_ws/src && cd pcl_ws/src
+    catkin_init_workspace
+    git clone https://github.com/ros-perception/perception_pcl.git
+    cd perception_pcl
+    # checkout pcl folder from groove branch
+    git checkout origin/groovy-unstable-devel -- pcl
+
+in `pcl/CMakeLists.txt`, remove or comment the line starting with `GIT_TAG 098....`
+in `pcl_ws`:
+
+    catkin_make_isolated -DCMAKE_BUILD_TYPE=Release
+    source devel_isolated/setup.bash
+
+change to your default workspace and continue coding :)
+
+
+  
