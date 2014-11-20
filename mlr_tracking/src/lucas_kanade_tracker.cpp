@@ -67,9 +67,6 @@ void LucasKanadeTrackerNode::callback(const PointCloudConstPtr& pc_msg)
     }
     publishTrajectoryUpdates(pc_msg);
   }
-  //typename pcl::PointCloud<pcl::PointXYZ>::Ptr pc_out(new pcl::PointCloud<pcl::PointXYZ>);
-  //pc_out->header = pc_msg->header;
-  //pub_.publish(pc_out);
 
   std::swap(features_[1], features_[0]);
   cv::swap(prev_gray_, gray_image); 
@@ -111,7 +108,7 @@ void LucasKanadeTrackerNode::publishTrajectoryUpdates(const PointCloudConstPtr& 
       update.point.z = pc->points[idx].z;
       if(update.point.z == update.point.z) // nan check
       {
-        if(need_init || (depth_jump_[i] - update.point.z) < .001)
+        //if(need_init || (depth_jump_[i] - update.point.z) < .01)
         {
           depth_jump_[i] = update.point.z;
           update.point.x = pc->points[idx].x;
