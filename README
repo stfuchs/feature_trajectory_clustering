@@ -21,3 +21,15 @@ the following dropbox link contains several bagfiles and other data
 not stored on the repository:
 
 https://www.dropbox.com/sh/dxuoppjfbenojlf/AABIntn4Zq49OTNQIXcSU-E3a?dl=0
+
+to play the raw bagfiles, start the openni node first without loading the device:
+
+   roslaunch openni_launch openni.launch load_driver:=false
+
+the play the rosbag file. To extract trajectories, start
+
+   rosrun python_doodles save_trajectories_to_file.py
+
+before playing the bagfile. When the bagfile is finished call the service
+
+   rosservice call /save_lk_points "prefix: '/path/to/destination/'"
