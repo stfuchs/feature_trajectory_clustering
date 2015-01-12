@@ -97,6 +97,16 @@ struct PrintIds
   void operator() (T const& t) { std::cout << t.id << std::endl; }
 };
 
+template<typename OT>
+struct CopyIds
+{
+  template<typename T>
+  void operator() (T const& t, OT& vec_out) {
+    cast_value<typename T::IdT>(vec_out).push_back(t.id);
+  }
+};
+
+
 
 template<typename... Ts>
 struct Kernel
@@ -154,17 +164,17 @@ struct Kernel
     foreach_value(data,DistanceCalculator<T>(f),distances);
   }
 
-  void computeKernelMatrix()
+  void computeKernelMatrix(Eigen::MatrixXf& K, MultiType<std::vector,id_types>& ids)
   {
     std::vector<float> result;
     foreach_twice(data,MatrixCalculator(),distances,result);
     int n = .5+.5*sqrt(1.+8.*result.size());
-    Eigen::MatrixXf m = Eigen::MatrixXf::Ones(n,n);
+    K = Eigen::MatrixXf::Ones(n,n);
     typename std::vector<float>::iterator it = result.begin();
-    for(int i=0;i<n;++i) for(int j=i+1;j<n; ++j) m(i,j) = m(j,i) = *it++;
+    for(int i=0;i<n;++i) for(int j=i+1;j<n; ++j) K(i,j) = K(j,i) = *it++;
 
-    std::cout << m << std::endl;
-    foreach_value(data,PrintIds());
+    std::cout << K << std::endl;
+    foreach_value(data, CopyIds<MultiType<std::vector,id_types> >(), ids);
   }
 };
 
