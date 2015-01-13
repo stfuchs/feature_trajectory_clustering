@@ -10,7 +10,7 @@
 
 #include <ros/ros.h>
 
-#include "mlr_msgs/TrajectoryPointUpdateArray.h"
+#include <mlr_msgs/TrajectoryPointUpdateArray.h>
 #include "mlr_common/kernel.hpp"
 #include "mlr_common/tracker_types.hpp"
 #include "mlr_clustering/object_prediction.hpp"

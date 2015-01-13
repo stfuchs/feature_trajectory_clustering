@@ -108,7 +108,7 @@ include_directories(
 
 ## Declare a cpp executable
 add_executable(lucas_kanade_tracker src/lucas_kanade_tracker.cpp)
-add_executable(depth_lucas_kanade_tracker src/experimental_depth_lucas_kanade_tracker.cpp)
+#add_executable(depth_lucas_kanade_tracker src/experimental_depth_lucas_kanade_tracker.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -120,9 +120,7 @@ target_link_libraries(lucas_kanade_tracker
 #   ${OpenCV_LIBRARIES}
 )
 
-target_link_libraries(depth_lucas_kanade_tracker
-  ${catkin_LIBRARIES}
-)
+#target_link_libraries(depth_lucas_kanade_tracker ${catkin_LIBRARIES})
 
 #############
 ## Install ##

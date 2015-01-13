@@ -12,7 +12,7 @@
 #include <Eigen/Dense>
 #include <opencv2/ml/ml.hpp>
 
-#include "mlr_common/multi_type.hpp"
+#include <mlr_common/multi_type.hpp>
 
 template<typename... Ts>
 struct ObjectPrediction
@@ -29,7 +29,7 @@ struct ObjectPrediction
       std::cout << "Eigendecomposition of Kernel failed!" << std::endl;
       return;
     }
-    const cv::Mat K_map(K.rows(), K.cols(), CV_32FC1, K.data());
+    const cv::Mat K_map(K.rows(), K.cols(), CV_32FC1, const_cast<float*>(K.data()));
     cv::Mat log_likelihoods(K.rows(), 1, CV_64FC1);
     cv::Mat labels(K.rows(), 1, CV_32SC1);
     cv::EM gmm(6);

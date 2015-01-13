@@ -75,7 +75,6 @@ generate_messages(
   DEPENDENCIES
     std_msgs
     geometry_msgs
-    mlr_msgs
 )
 
 ###################################
@@ -91,6 +90,7 @@ catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mlr_msgs
   CATKIN_DEPENDS
+    message_runtime
     std_msgs
     geometry_msgs
 #  DEPENDS system_lib
