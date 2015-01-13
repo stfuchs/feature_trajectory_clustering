@@ -4,7 +4,11 @@ project(mlr_clustering)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  mlr_msgs
+  mlr_common
+  cv_bridge)
+find_package(Eigen REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -76,9 +80,9 @@ find_package(catkin REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
+  INCLUDE_DIRS include
 #  LIBRARIES mlr_clustering
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS mlr_msgs
 #  DEPENDS system_lib
 )
 
@@ -88,7 +92,12 @@ catkin_package(
 
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
-# include_directories(include)
+include_directories(include)
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+  ${Eigen_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
 
 ## Declare a cpp library
 # add_library(mlr_clustering
@@ -96,16 +105,16 @@ catkin_package(
 # )
 
 ## Declare a cpp executable
-# add_executable(mlr_clustering_node src/mlr_clustering_node.cpp)
+add_executable(lk_clustering_node src/lk_clustering_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(mlr_clustering_node mlr_clustering_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-# target_link_libraries(mlr_clustering_node
-#   ${catkin_LIBRARIES}
-# )
+target_link_libraries(lk_clustering_node
+  ${catkin_LIBRARIES}
+)
 
 #############
 ## Install ##
@@ -154,3 +163,9 @@ catkin_package(
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+
+
+set(CMAKE_CXX_FLAGS "-Wall -g -std=c++0x ${CMAKE_CXX_FLAGS}")
+# Use release build for significant better performance
+#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)

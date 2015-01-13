@@ -12,7 +12,7 @@
 #include <Eigen/Dense>
 #include <opencv2/ml/ml.hpp>
 
-#include "mlr_common/kernel.hpp"
+#include "mlr_common/multi_type.hpp"
 
 template<typename... Ts>
 struct ObjectPrediction

@@ -115,19 +115,37 @@ struct Kernel
   typedef type_array<typename Ts::IdT...> id_types;
 
   template<typename T>
+  struct dist_types
+  {
+    typedef type_array< 
+      typename trajectory_type_promotion<typename T::type,typename Ts::type>::res_distance_type...
+      > types;
+    typedef MultiTypeDuo<std::unordered_map,id_types,types> distance_set;
+    typedef std::deque<distance_set> distance_que;
+  };
+/*
   using dist_types = type_array< 
     typename trajectory_type_promotion<typename T::type,typename Ts::type>::res_distance_type... >;
 
   template<typename T>
-  using DistanceSet = MultiTypeDuo<std::unordered_map,id_types,dist_types<T> >;
+  using DistanceSet = 
 
   template<typename T>
   using DistanceQue = std::deque<DistanceSet<T> >;
+*/
 
+  MultiTypeDuo<std::unordered_map,
+               id_types,
+               traj_types> data;
 
-  MultiTypeDuo<std::unordered_map,id_types,traj_types> data;
-  MultiTypeDuo<std::unordered_map,id_types,type_array<DistanceQue<Ts>...> > distances;
+  MultiTypeDuo<std::unordered_map,
+               id_types,
+               type_array<typename dist_types<Ts>::distance_que...> > distances;
 
+  template<typename IdT>
+  inline bool isNew(IdT const& id) {
+    return cast_key<IdT>(data).find(id) == cast_key<IdT>(data).end();
+  }
 
   template<typename IdT>
   void newTrajectory(IdT const& id,
@@ -138,8 +156,10 @@ struct Kernel
     T& f = set(data,id);
     f.x.push_front(x_new);
     f.t.push_front(t_new);
-    DistanceQue<T>& d = set(distances,id, DistanceQue<T>());
-    d.push_front(DistanceSet<T>()); // push empty distance_set onto deque
+    //DistanceQue<T>& d = set(distances,id, DistanceQue<T>());
+    typename dist_types<T>::distance_que& d = 
+      set(distances,id, typename dist_types<T>::distance_que());
+    d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
   }
 
   template<typename IdT>
@@ -151,8 +171,9 @@ struct Kernel
     T& f = find(data,id);
     f.x.push_front(x_new);
     f.t.push_front(t_new);
-    DistanceQue<T>& d = find(distances,id);
-    d.push_front(DistanceSet<T>()); // push empty distance_set onto deque
+    //DistanceQue<T>& d = find(distances,id);
+    typename dist_types<T>::distance_que& d = find(distances,id);
+    d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
     while( (t_new - f.t.back() > T::timespan || f.t.size() > T::n_max) && f.t.size() > T::n_min)
     {
       f.t.pop_back();

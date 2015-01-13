@@ -150,9 +150,8 @@ trajectory_policy<PoseTraits,PoseTraits>::lin_inter(
   PoseTraits::StateT const& x2,
   typename trajectory_policy<PoseTraits,PoseTraits>::TimeT const& a)
 {
-  // Maybe SLERP for quaternion interpolation?
-  return PoseTraits::StateT{
-    a*x1.point + (1.f-a)*x2.point, a*x1.orienation + (1.f-a)*x2.orienation };
+  return PoseTraits::StateT{ a*x1.point + (1.f-a)*x2.point, 
+      x1.orientation.slerp(1.-a, x2.orientation) };
 }
 
 #endif
