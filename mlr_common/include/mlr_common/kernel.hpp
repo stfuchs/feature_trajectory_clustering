@@ -134,17 +134,6 @@ struct Kernel
     typedef std::deque<distance_set> distance_que;
   };
 
-/*  // seems not to be working with older compilers:
-  using dist_types = type_array< 
-    typename trajectory_type_promotion<typename T::type,typename Ts::type>::res_distance_type... >;
-
-  template<typename T>
-  using DistanceSet = 
-
-  template<typename T>
-  using DistanceQue = std::deque<DistanceSet<T> >;
-*/
-
   MultiTypeDuo<std::unordered_map,
                id_types,
                traj_types> data;
@@ -185,10 +174,12 @@ struct Kernel
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
     while( (t_new - f.t.back() > T::timespan || f.t.size() > T::n_max) && f.t.size() > T::n_min)
     {
+      std::cout << "pop id " << id << std::endl;
       f.t.pop_back();
       f.x.pop_back();
       d.pop_back();
     }
+    
     // update distances of all other trajectories to the new time interval (t,t-1)
     // of this trajectory:
     foreach_value(data,DistanceCalculator<T>(f),distances);

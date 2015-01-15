@@ -31,7 +31,6 @@ struct LK_KernelNode
   void lkCallback(mlr_msgs::TrajectoryPointUpdateArray const& updated)
   {
     ros::Time start = ros::Time::now();
-
     typename std::vector<mlr_msgs::TrajectoryPointUpdate>::const_iterator it;
     for(it = updated.points.begin(); it != updated.points.end(); ++it)
     {

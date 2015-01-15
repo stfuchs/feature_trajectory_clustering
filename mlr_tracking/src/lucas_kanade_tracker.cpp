@@ -119,23 +119,6 @@ struct LucasKanadeTrackerNode
       std::swap(p1,p0);
     }
     if(!update_array.points.empty()) pub_.publish(update_array);
-      /*
-      if(cv::norm(features_[0][i] - features_[1][i]) > 1)
-      {
-        size_t idx = round(features_[1][i].x) + round(features_[1][i].y)*pc->width;
-        update.point.z = pc->points[idx].z;
-        if(update.point.z == update.point.z) // nan check
-        {
-          //if(need_init || (depth_jump_[i] - update.point.z) < .01)
-          {
-            update.point.x = pc->points[idx].x;
-            update.point.y = pc->points[idx].y;
-            update.id = i;
-            update_array.points.push_back(update);
-          }
-        }
-      }
-      */
   }
 
 

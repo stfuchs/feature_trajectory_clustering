@@ -43,7 +43,7 @@ struct DefaultTraits
 {
   typedef float ValueT;
   typedef float StateT;
-  typedef float TimeT;
+  typedef double TimeT;
 };
 
 struct PointTraits : DefaultTraits
