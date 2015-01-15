@@ -12,17 +12,16 @@
 #include <Eigen/Dense>
 #include <opencv2/ml/ml.hpp>
 
-#include <mlr_common/multi_type.hpp>
 
-template<typename... Ts>
 struct ObjectPrediction
 {
-  typedef type_array<Ts...> traj_types;
-  typedef type_array<typename Ts::IdT...> id_types;
-  typedef MultiType<std::vector,id_types> VecIds;
-
-  void predict(Eigen::MatrixXf const& K, VecIds const& ids)
+  void predict(Eigen::MatrixXf const& K, std::vector<int64_t> const& ids)
   {
+    if (K.rows() < 10)
+    {
+      std::cout << "Kernel matrix n < 10" << std::endl;
+      return;
+    }
     Eigen::SelfAdjointEigenSolver<Eigen::MatrixXf> eigensolver(K);
     if (eigensolver.info() != Eigen::Success)
     {
@@ -34,6 +33,7 @@ struct ObjectPrediction
     cv::Mat labels(K.rows(), 1, CV_32SC1);
     cv::EM gmm(6);
     gmm.train(K_map,log_likelihoods,labels);
+    std::cout << labels << std::endl;
   }
   
 };

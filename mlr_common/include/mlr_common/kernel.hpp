@@ -106,6 +106,16 @@ struct CopyIds
   }
 };
 
+template<>
+struct CopyIds<std::vector<int64_t> >
+{
+  template<typename T>
+  void operator() (T const& t, std::vector<int64_t>& vec_out) {
+    vec_out.push_back(to_runtime_id(t.id)._id);
+  }
+};
+
+
 
 
 template<typename... Ts>
@@ -123,7 +133,8 @@ struct Kernel
     typedef MultiTypeDuo<std::unordered_map,id_types,types> distance_set;
     typedef std::deque<distance_set> distance_que;
   };
-/*
+
+/*  // seems not to be working with older compilers:
   using dist_types = type_array< 
     typename trajectory_type_promotion<typename T::type,typename Ts::type>::res_distance_type... >;
 
@@ -156,7 +167,6 @@ struct Kernel
     T& f = set(data,id);
     f.x.push_front(x_new);
     f.t.push_front(t_new);
-    //DistanceQue<T>& d = set(distances,id, DistanceQue<T>());
     typename dist_types<T>::distance_que& d = 
       set(distances,id, typename dist_types<T>::distance_que());
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
@@ -171,7 +181,6 @@ struct Kernel
     T& f = find(data,id);
     f.x.push_front(x_new);
     f.t.push_front(t_new);
-    //DistanceQue<T>& d = find(distances,id);
     typename dist_types<T>::distance_que& d = find(distances,id);
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
     while( (t_new - f.t.back() > T::timespan || f.t.size() > T::n_max) && f.t.size() > T::n_min)
@@ -194,8 +203,14 @@ struct Kernel
     typename std::vector<float>::iterator it = result.begin();
     for(int i=0;i<n;++i) for(int j=i+1;j<n; ++j) K(i,j) = K(j,i) = *it++;
 
-    std::cout << K << std::endl;
+
     foreach_value(data, CopyIds<MultiType<std::vector,id_types> >(), ids);
+  }
+
+  void computeKernelMatrixData(std::vector<float>& v_data, std::vector<int64_t>& v_ids)
+  {
+    foreach_twice(data, MatrixCalculator(), distances, v_data);
+    foreach_value(data, CopyIds<std::vector<int64_t> >(), v_ids);
   }
 };
 

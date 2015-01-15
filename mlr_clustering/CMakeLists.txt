@@ -108,6 +108,7 @@ include_directories(
 
 ## Declare a cpp executable
 add_executable(lk_clustering_node src/lk_clustering_node.cpp)
+add_executable(lk_kernel_node src/lk_kernel_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -115,6 +116,10 @@ add_executable(lk_clustering_node src/lk_clustering_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(lk_clustering_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(lk_kernel_node
   ${catkin_LIBRARIES}
 )
 
@@ -169,5 +174,5 @@ target_link_libraries(lk_clustering_node
 
 set(CMAKE_CXX_FLAGS "-Wall -g -std=c++0x ${CMAKE_CXX_FLAGS}")
 # Use release build for significant better performance
-#set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)

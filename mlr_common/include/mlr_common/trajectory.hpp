@@ -64,10 +64,6 @@ struct PoseTraits : DefaultTraits
  *  Type Functions
  **************************************************************************************/
 
-// maps id type to trajectory type, needs to be specialized by each tracker
-template<typename T>
-struct id_traits {};
-
 // defines the dominant type:
 template<typename T1, typename T2>
 struct trajectory_type_promotion {};

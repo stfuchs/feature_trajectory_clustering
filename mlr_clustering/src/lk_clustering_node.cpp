@@ -11,15 +11,14 @@
 #include <ros/ros.h>
 
 #include <mlr_msgs/TrajectoryPointUpdateArray.h>
+#include <mlr_msgs/KernelState.h>
 #include "mlr_common/kernel.hpp"
 #include "mlr_common/tracker_types.hpp"
 #include "mlr_clustering/object_prediction.hpp"
 
 struct LK_ClusteringNode
 {
-  //typedef LK_Tracker::IdT LK_id;
-  //typedef LK_
-  LK_ClusteringNode() : itopic("lk_points")
+  LK_ClusteringNode() : itopic("lk_kernel")
   { init(); }
 
   void init()
@@ -28,25 +27,19 @@ struct LK_ClusteringNode
     // pub =
   }
 
-  void lkCallback(mlr_msgs::TrajectoryPointUpdateArray const& updated)
+  void lkCallback(mlr_msgs::KernelState const& kernel)
   {
     ros::Time start = ros::Time::now();
+    size_t n = kernel.ids.size();
+    Eigen::MatrixXf K = Eigen::MatrixXf::Ones(n,n);
+    typename std::vector<float>::const_iterator it = kernel.data.begin();
+    for(size_t i=0;i<n;++i) 
+      for(size_t j=i+1;j<n; ++j)
+        K(i,j) = K(j,i) = *it++;
 
-    typename std::vector<mlr_msgs::TrajectoryPointUpdate>::const_iterator it;
-    for(it = updated.points.begin(); it != updated.points.end(); ++it)
-    {
-      LK_Tracker::IdT id(it->id);
-      LK_Tracker::StateT p(it->point.x, it->point.y, it->point.z);
-      LK_Tracker::TimeT t(it->header.stamp.toSec());
-      if (kernel.isNew(id)) kernel.newTrajectory(id,p,t);
-      else kernel.updateTrajectory(id,p,t);
-    }
-    MultiType<std::vector,type_array<LK_Tracker::IdT> > ids;
-    Eigen::MatrixXf K;
-    kernel.computeKernelMatrix(K,ids);
-    predictor.predict(K,ids);
+    predictor.predict(K,kernel.ids);
     ros::Duration elapsed = ros::Time::now() - start;
-    ROS_INFO("LK Update took %f", elapsed.toSec());
+    ROS_INFO("Prediction took %f", elapsed.toSec());
   }
 
 
@@ -56,8 +49,7 @@ struct LK_ClusteringNode
   ros::NodeHandle nh;
   ros::Subscriber sub;
   ros::Publisher pub;
-  Kernel<LK_Tracker> kernel;
-  ObjectPrediction<LK_Tracker> predictor;
+  ObjectPrediction predictor;
 };
 
 int main(int argc, char** argv)
