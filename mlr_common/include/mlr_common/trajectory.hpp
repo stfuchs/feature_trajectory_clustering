@@ -79,7 +79,7 @@ struct trajectory_type_promotion<T,T>
 template<>
 struct trajectory_type_promotion<PointTraits,PoseTraits>
 {
-  typedef typename PointTraits::ValueT res_distance_type;
+  typedef  double res_distance_type;
   typedef typename PointTraits::TimeT res_time_type;
   typedef typename PointTraits::StateT res_state_type;
 };
@@ -87,7 +87,7 @@ struct trajectory_type_promotion<PointTraits,PoseTraits>
 template<>
 struct trajectory_type_promotion<PoseTraits,PointTraits>
 {
-  typedef typename PointTraits::ValueT res_distance_type;
+  typedef double res_distance_type;
   typedef typename PointTraits::TimeT res_time_type;
   typedef typename PointTraits::StateT res_state_type;
 };

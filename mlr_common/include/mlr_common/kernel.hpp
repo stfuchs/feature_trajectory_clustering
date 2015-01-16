@@ -82,7 +82,7 @@ struct MatrixCalculator
       sum_sqr += d*d;
     }
     if(n!=0) {
-      float n_inv = 1./n;
+      double n_inv = 1./n;
       result.push_back( exp(-(sum_sqr - sum*sum*n_inv)*n_inv) );
     }
     else {
@@ -196,6 +196,7 @@ struct Kernel
 
 
     foreach_value(data, CopyIds<MultiType<std::vector,id_types> >(), ids);
+    assert(n==int(ids.size()));
   }
 
   void computeKernelMatrixData(std::vector<float>& v_data, std::vector<int64_t>& v_ids)
