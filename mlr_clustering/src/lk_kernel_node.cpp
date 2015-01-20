@@ -41,14 +41,16 @@ struct LK_KernelNode
       else kernel.updateTrajectory(id,p,t);
     }
     ROS_INFO("LK Update took %f", (ros::Time::now() - start).toSec());
-    publishKernelState();
+    publishKernelState(updated.points[0].header);
   }
 
-  void publishKernelState()
+  void publishKernelState(const std_msgs::Header& header)
   {
     ros::Time start = ros::Time::now();
     mlr_msgs::KernelState ks;
+    ks.header = header;
     kernel.computeKernelMatrixData(ks.data,ks.ids);
+    std::cout<<"Kernel ids: "<<ks.ids.size()<<" data: "<<ks.data.size()<<std::endl;
     pub.publish(ks);
     ROS_INFO("LK Kernel matrix took %f", (ros::Time::now() - start).toSec());
   }

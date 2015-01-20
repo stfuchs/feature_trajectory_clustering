@@ -31,7 +31,7 @@ struct LK_Tracker : Trajectory<PointTraits,LK_Tracker>
 };
 
 const float LK_Tracker::weight = .5;
-const typename LK_Tracker::Base::TimeT LK_Tracker::timespan = 60.;
+const typename LK_Tracker::Base::TimeT LK_Tracker::timespan = 10.;
 
 
 template<typename T>
@@ -60,7 +60,7 @@ struct QR_Tracker : Trajectory<PoseTraits,QR_Tracker>
 };
 
 const float QR_Tracker::weight = .8;
-const typename QR_Tracker::Base::TimeT QR_Tracker::timespan = 60.;
+const typename QR_Tracker::Base::TimeT QR_Tracker::timespan = 10.;
 
 
 template<typename T>

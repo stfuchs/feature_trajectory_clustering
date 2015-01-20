@@ -67,22 +67,29 @@ struct MatrixCalculator
       if (outer.t[i] >= inner.t.front()) continue;
       if (outer.t[i] < inner.t.back()) break;
       DistanceT const d = find(que_outer[i],inner.id);
+      if(d!=d) std::cout << "d is nan" << std::endl;
       ++n;
       sum += d;
       sum_sqr += d*d;
     }
+    if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
+
     auto& que_inner = find(distances,inner.id);
     for(unsigned int i=0; i<que_inner.size(); ++i) // iterate inner distances
     {
       if (inner.t[i] >= outer.t.front()) continue;
       if (inner.t[i] < outer.t.back()) break;
       DistanceT const d = find(que_inner[i],outer.id);
+      if(d!=d) std::cout << "d is nan" << std::endl;
       ++n;
       sum += d;
       sum_sqr += d*d;
     }
+    if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
+
     if(n!=0) {
       double n_inv = 1./n;
+      if(sum*sum != sum*sum) std::cout << "sum*sum is nan" << std::endl;
       result.push_back( exp(-(sum_sqr - sum*sum*n_inv)*n_inv) );
     }
     else {
@@ -174,7 +181,7 @@ struct Kernel
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
     while( (t_new - f.t.back() > T::timespan || f.t.size() > T::n_max) && f.t.size() > T::n_min)
     {
-      std::cout << "pop id " << id << std::endl;
+      //std::cout << "pop id " << id << std::endl;
       f.t.pop_back();
       f.x.pop_back();
       d.pop_back();
