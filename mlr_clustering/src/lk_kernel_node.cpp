@@ -30,6 +30,15 @@ struct LK_KernelNode
 
   void lkCallback(mlr_msgs::TrajectoryPointUpdateArray const& updated)
   {
+    if (updated.points[0].header.stamp < last_header.stamp)
+    {
+      ROS_INFO("Message timestamp older than previous: RESET");
+      kernel.reset();
+    }
+
+
+    last_header = updated.points[0].header;
+
     ros::Time start = ros::Time::now();
     typename std::vector<mlr_msgs::TrajectoryPointUpdate>::const_iterator it;
     for(it = updated.points.begin(); it != updated.points.end(); ++it)
@@ -63,6 +72,7 @@ struct LK_KernelNode
   ros::Subscriber sub;
   ros::Publisher pub;
   Kernel<LK_Tracker> kernel;
+  std_msgs::Header last_header;
 };
 
 int main(int argc, char** argv)

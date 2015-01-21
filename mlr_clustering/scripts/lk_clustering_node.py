@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
-import roslib
-roslib.load_manifest('mlr_clustering')
 import rospy
-
+import dynamic_reconfigure.server
+from mlr_clustering.cfg import lk_clustering_paramsConfig
 from mlr_msgs.msg import KernelState
+
 import numpy as np
 from sklearn.mixture import GMM
 
@@ -55,12 +55,7 @@ def run():
     print "Subscribed to lk_kernel"
     rospy.spin()
 
-
-if __name__ == '__main__':
-    import sys
-    print ("Python: " + sys.version)
-    rospy.init_node('lk_clustering_node')
-    run()
+def save():
     print ("saving labels")
     path = "/home/steffen/git/ipynb/trajectory_clustering/labels/"
     np.save(path+"labels", np.array(id_map.values()))
@@ -74,3 +69,15 @@ if __name__ == '__main__':
         name = path+"ids/"+str(i).zfill(4)
         print ("saveing ids "+name)
         np.save(name, np.array(ids[i]))
+
+def reconfigure(config, level):
+    n_gmm = config["n_gmm"]
+    print("reconfigure n_gmm={}".format(n_gmm))
+    return config
+
+if __name__ == '__main__':
+    import sys
+    print ("Python: " + sys.version)
+    rospy.init_node('lk_clustering_node')
+    server = dynamic_reconfigure.server.Server(lk_clustering_paramsConfig, reconfigure)
+    run()

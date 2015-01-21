@@ -5,12 +5,15 @@ project(mlr_clustering)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
   cmake_modules
+  cv_bridge
+  dynamic_reconfigure
   mlr_msgs
   mlr_common
-  cv_bridge)
+  roscpp)
 find_package(Eigen REQUIRED)
+
+generate_dynamic_reconfigure_options(cfg/lk_clustering_params.cfg)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -72,6 +75,7 @@ find_package(Eigen REQUIRED)
 #   std_msgs  # Or other packages containing msgs
 # )
 
+
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -84,7 +88,7 @@ find_package(Eigen REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mlr_clustering
-  CATKIN_DEPENDS mlr_msgs
+   CATKIN_DEPENDS mlr_msgs
 #  DEPENDS system_lib
 )
 
@@ -108,7 +112,7 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(lk_clustering_node src/lk_clustering_node.cpp)
+#add_executable(lk_clustering_node src/lk_clustering_node.cpp)
 add_executable(lk_kernel_node src/lk_kernel_node.cpp)
 
 ## Add cmake target dependencies of the executable/library

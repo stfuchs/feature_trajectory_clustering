@@ -101,6 +101,26 @@ void TrajectoryVisualizationNode::callback_lk(
   unsigned int n = update_array.points.size();
   ROS_INFO("Received %i lucas kanade updates",n);
 
+  if (update_array.points[0].header.stamp < last_header_.stamp)
+  {
+    ROS_INFO("Message timestamp older than previous: RESET");
+    visualization_msgs::MarkerArray v_markers;
+    typename std::map<int,visualization_msgs::Marker>::iterator it;
+    for(it=traj_path_.begin(); it!=traj_path_.end(); ++it)
+    {
+      int id = it->first;
+      it->second.action = visualization_msgs::Marker::DELETE;
+      traj_points_[id].action = visualization_msgs::Marker::DELETE;
+      v_markers.markers.push_back(it->second);
+      v_markers.markers.push_back(traj_points_[id]);
+    }
+    pub_path_.publish(v_markers);
+
+    traj_path_.clear();
+    traj_points_.clear();
+  }
+  last_header_ = update_array.points[0].header;
+
   visualization_msgs::MarkerArray v_markers;
 
   for(unsigned int i=0; i<n; ++i)

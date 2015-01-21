@@ -338,6 +338,15 @@ struct for_each_value_element
   }
 };
 
+struct get_subtype
+{
+  template<typename T, typename FuncT, typename... ArgsT>
+  inline void operator() (T& m, FuncT f, ArgsT& ... args)
+  {
+    f(m._M_impl, args...);
+  }
+};
+
 template<typename T, typename FuncT, typename... ArgsT>
 inline void foreach(T& m, FuncT f, ArgsT& ... args)
 {
@@ -354,6 +363,12 @@ template<typename T, typename FuncT, typename... ArgsT>
 inline void foreach_twice(T& m, FuncT f, ArgsT& ... args)
 {
   for_each_type<T>()(m, for_each_element_outer(), f, args...);
+}
+
+template<typename T, typename FuncT, typename... ArgsT>
+inline void foreach_subtype(T& m, FuncT f, ArgsT& ... args)
+{
+  for_each_type<T>()(m, get_subtype(), f, args...);
 }
 
 #endif

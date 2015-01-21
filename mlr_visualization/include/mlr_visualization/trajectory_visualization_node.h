@@ -46,6 +46,7 @@ private:
   ros::Publisher pub_path_;
   std::map<int,visualization_msgs::Marker> traj_path_;
   std::map<int,visualization_msgs::Marker> traj_points_;
+  std_msgs::Header last_header_;
   //std::map<int,std_msgs::ColorRGBA> colors_;
 };
 

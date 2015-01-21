@@ -122,7 +122,11 @@ struct CopyIds<std::vector<int64_t> >
   }
 };
 
-
+struct ClearAll
+{
+  template<typename T>
+  void operator() (T& t) { t.clear(); }
+};
 
 
 template<typename... Ts>
@@ -210,6 +214,12 @@ struct Kernel
   {
     foreach_twice(data, MatrixCalculator(), distances, v_data);
     foreach_value(data, CopyIds<std::vector<int64_t> >(), v_ids);
+  }
+
+  void reset()
+  {
+    foreach_subtype(data, ClearAll());
+    foreach_subtype(distances, ClearAll());
   }
 };
 
