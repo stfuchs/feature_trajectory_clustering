@@ -1,0 +1,24 @@
+<library path="src">
+  <class name="ID Selector"
+         type="rqt_tracker_id_selector.id_selector.IdSelector"
+         base_class_type="rqt_gui_py::Plugin">
+    <description>
+      A Python GUI plugin to select tracker IDs for visualization.
+    </description>
+    <qtgui>
+      <group>
+        <label>Tracker</label>
+      </group>
+      <!-- optional grouping...
+      <group>
+        <label>Subgroup</label>
+      </group>
+      -->
+      <label>ID Selector</label>
+      <icon type="theme">format-justify-fill</icon>
+      <statustip>
+        A Python GUI plugin to select tracker IDs for visualization.
+      </statustip>
+    </qtgui>
+  </class>
+</library>
