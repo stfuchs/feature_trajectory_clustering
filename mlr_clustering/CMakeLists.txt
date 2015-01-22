@@ -120,9 +120,9 @@ add_executable(lk_kernel_node src/lk_kernel_node.cpp)
 # add_dependencies(mlr_clustering_node mlr_clustering_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(lk_clustering_node
-  ${catkin_LIBRARIES}
-)
+#target_link_libraries(lk_clustering_node
+#  ${catkin_LIBRARIES}
+#)
 
 target_link_libraries(lk_kernel_node
   ${catkin_LIBRARIES}
