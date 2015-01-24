@@ -61,16 +61,19 @@ struct MatrixCalculator
     int n = 0;
     DistanceT sum = 0;
     DistanceT sum_sqr = 0;
+    DistanceT sum_w = 0;
+
     auto& que_outer = find(distances,outer.id);
     for(unsigned int i=0; i<que_outer.size(); ++i) // iterate outer distances
     {
       if (outer.t[i] >= inner.t.front()) continue;
       if (outer.t[i] < inner.t.back()) break;
       DistanceT const d = find(que_outer[i],inner.id);
-      if(d!=d) std::cout << "d is nan" << std::endl;
+      if(outer.w[i]!=outer.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
-      sum += d;
-      sum_sqr += d*d;
+      sum += outer.w[i]*d;
+      sum_sqr += outer.w[i]*d*d;
+      sum_w += outer.w[i];
     }
     if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
 
@@ -80,17 +83,18 @@ struct MatrixCalculator
       if (inner.t[i] >= outer.t.front()) continue;
       if (inner.t[i] < outer.t.back()) break;
       DistanceT const d = find(que_inner[i],outer.id);
-      if(d!=d) std::cout << "d is nan" << std::endl;
+      if(inner.w[i]!=inner.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
-      sum += d;
-      sum_sqr += d*d;
+      sum += inner.w[i]*d;
+      sum_sqr += inner.w[i]*d*d;
+      sum_w += inner.w[i];
     }
     if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
 
-    if(n!=0) {
-      double n_inv = 1./n;
+    if(sum_w!=0) {
+      double n_inv = 1./sum_w;
       if(sum*sum != sum*sum) std::cout << "sum*sum is nan" << std::endl;
-      result.push_back( exp(-(sum_sqr - sum*sum*n_inv)*n_inv) );
+      result.push_back( exp(-1.*(sum_sqr - sum*sum*n_inv)*n_inv) );
     }
     else {
       result.push_back( .5 );
@@ -167,6 +171,7 @@ struct Kernel
     T& f = set(data,id);
     f.x.push_front(x_new);
     f.t.push_front(t_new);
+    f.w.push_front(0);
     typename dist_types<T>::distance_que& d = 
       set(distances,id, typename dist_types<T>::distance_que());
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
@@ -179,13 +184,16 @@ struct Kernel
   {
     typedef typename id_traits<IdT>::trajectory T;
     T& f = find(data,id);
+    f.w.push_front(computeWeight<T>(f.x[0],x_new,f.t[0],t_new));
     f.x.push_front(x_new);
     f.t.push_front(t_new);
+
     typename dist_types<T>::distance_que& d = find(distances,id);
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
     while( (t_new - f.t.back() > T::timespan || f.t.size() > T::n_max) && f.t.size() > T::n_min)
     {
       //std::cout << "pop id " << id << std::endl;
+      f.w.pop_back();
       f.t.pop_back();
       f.x.pop_back();
       d.pop_back();

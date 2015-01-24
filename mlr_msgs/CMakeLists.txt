@@ -53,6 +53,7 @@ add_message_files(
     TrajectoryPoseUpdate.msg
     TrajectoryPoseUpdateArray.msg
     KernelState.msg
+    ObjectIds.msg
 )
 
 ## Generate services in the 'srv' folder

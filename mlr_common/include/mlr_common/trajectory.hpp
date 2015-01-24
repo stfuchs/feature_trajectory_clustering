@@ -33,7 +33,17 @@ struct Trajectory
   IdT const id;
   std::deque<TimeT> t;
   std::deque<StateT> x;
+  std::deque<ValueT> w;
 };
+
+template<typename T>
+inline typename T::ValueT computeWeight(
+  typename T::StateT const& x1, typename T::StateT const& x2, 
+  typename T::TimeT const& t1, typename T::TimeT const& t2)
+{
+  typename T::StateT v = 100.*(x2-x1)/(t2-t1);
+  return 1.-exp(-v.dot(v));
+}
 
 
 /***************************************************************************************
@@ -53,12 +63,25 @@ struct PointTraits : DefaultTraits
 
 struct PoseTraits : DefaultTraits
 {
+  typedef Eigen::Matrix<float,3,1> PointT;
+  typedef Eigen::Quaternion<float> OrientationT;
+  
   struct StateT
   {
-    Eigen::Matrix<float,3,1> point;
-    Eigen::Quaternion<float> orientation;
+    PointT point;
+    OrientationT orientation;
   };
 };
+
+template<>
+inline PoseTraits::ValueT computeWeight<PoseTraits>(
+  PoseTraits::StateT const& x1, PoseTraits::StateT const& x2,
+  PoseTraits::TimeT const& t1, PoseTraits::TimeT const& t2)
+{
+  PoseTraits::PointT v = 100.*(x2.point-x1.point)/(t2-t1);
+  return 1.-exp(-v.dot(v));
+}
+
 
 /***************************************************************************************
  *  Type Functions

@@ -3,8 +3,7 @@
  * @author Steffen Fuchs <steffenfuchs@samson.informatik.uni-stuttgart.de>
  * @date   Thu Nov  6 13:07:32 2014
  * 
- * @brief  ROS node that subscribes to various topics to
- *         turn trajectories into nav_msgs/Path messages
+ * @brief  ROS node that subscribes to various topics
  *         for visualization in rviz.
  */
 
@@ -19,6 +18,10 @@ void TrajectoryVisualizationNode::init()
   ROS_INFO("Subscribing to lr_points");
   sub_lk_ = nh_.subscribe(
     "lk_points", 100, &TrajectoryVisualizationNode::callback_lk,this);
+  ROS_INFO("Subscribing to lk_objects");
+  sub_objects_ = nh_.subscribe(
+    "lk_objects", 100, &TrajectoryVisualizationNode::callback_objects,this);
+  
 
   pub_path_ = nh_.advertise<visualization_msgs::MarkerArray>("trajectory_marker", 1);
 }
@@ -26,8 +29,8 @@ void TrajectoryVisualizationNode::init()
 void TrajectoryVisualizationNode::createNewMarker(int id, const std::string frame_id,
                                                   const geometry_msgs::Point& point)
 {
-  Visualization::Utils::ColorRGB c;
-  Visualization::Utils::generateColor(id,c);
+  //Visualization::Utils::ColorRGB c;
+  //Visualization::Utils::generateColor(id,c);
 
   visualization_msgs::Marker marker;
   marker.header.frame_id = frame_id;//"camera_rgb_optical_frame";
@@ -47,9 +50,9 @@ void TrajectoryVisualizationNode::createNewMarker(int id, const std::string fram
   marker.scale.y = 0.1;
   marker.scale.z = 0.1;
   marker.color.a = 1.;
-  marker.color.r = float(c.r)/255.;
-  marker.color.g = float(c.g)/255.;
-  marker.color.b = float(c.b)/255.;
+  marker.color.r = 1.;//float(c.r)/255.;
+  marker.color.g = 1.;//float(c.g)/255.;
+  marker.color.b = 1.;//float(c.b)/255.;
   marker.points.push_back(point);
   traj_path_.insert(std::make_pair(id,marker));
 
@@ -60,6 +63,7 @@ void TrajectoryVisualizationNode::createNewMarker(int id, const std::string fram
   marker.color.r = 1.;
   marker.color.g = 1.;
   marker.color.b = 1.;
+  marker.color.a = .3;
   traj_points_.insert(std::make_pair(id,marker));
 }
 
@@ -142,6 +146,36 @@ void TrajectoryVisualizationNode::callback_lk(
     }
   }
   pub_path_.publish(v_markers);
+}
+
+void TrajectoryVisualizationNode::callback_objects(
+  const mlr_msgs::ObjectIds& msg)
+{
+  typename std::map<int,visualization_msgs::Marker>::iterator it;
+  for(it=traj_path_.begin(); it!=traj_path_.end(); ++it)
+  {
+    it->second.color.r = 1.;
+    it->second.color.g = 1.;
+    it->second.color.b = 1.;
+  }
+
+  for(int i=0; i<msg.offsets.size()-1; ++i)
+  {
+    Visualization::Utils::ColorRGB c;
+    Visualization::Utils::generateColor(i,c);
+    //std::cout << "Label: "<<i<< " Color: "
+    //          << int(c.r) << " " << int(c.g) << " " << int(c.b) << std::endl;
+    for(int j=msg.offsets[i]; j<msg.offsets[i+1]; ++j)
+    {
+      int id = msg.ids[j] >> 32;
+      if(traj_path_.count(id))
+      {
+        traj_path_[id].color.r = float(c.r)/255.;
+        traj_path_[id].color.g = float(c.g)/255.;
+        traj_path_[id].color.b = float(c.b)/255.;
+      }
+    }
+  }
 }
 
 int main(int argc, char** argv)
