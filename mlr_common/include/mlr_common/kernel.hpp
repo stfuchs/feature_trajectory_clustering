@@ -94,7 +94,7 @@ struct MatrixCalculator
     if(sum_w!=0) {
       double n_inv = 1./sum_w;
       if(sum*sum != sum*sum) std::cout << "sum*sum is nan" << std::endl;
-      result.push_back( exp(-1.*(sum_sqr - sum*sum*n_inv)*n_inv) );
+      result.push_back( exp(-100.*(sum_sqr - sum*sum*n_inv)*n_inv) );
     }
     else {
       result.push_back( .5 );
