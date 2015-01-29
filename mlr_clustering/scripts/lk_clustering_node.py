@@ -13,11 +13,11 @@ from collections import defaultdict
 
 class ClusteringNode:
     def __init__(self):
-        self.sub = rospy.Subscriber("lk_kernel",KernelState,self.lk_callback,queue_size=1)
+        self.sub = rospy.Subscriber("lk_kernel", KernelState, self.lk_callback,
+                                    queue_size=1, buff_size=2**24)
         self.pub_image = rospy.Publisher("lk_kernel_matrix",Image,queue_size=1)
         self.pub_objs = rospy.Publisher("lk_objects",ObjectIds,queue_size=1)
         self.bridge = CvBridge()
-        self.n_cluster = 8
         self.probs = {}
         self.last_header = Header()
 
@@ -88,7 +88,7 @@ class ClusteringNode:
                 it += 1
 
         from sklearn.mixture import GMM
-        gmm = GMM(n_components=self.n_cluster, covariance_type='full')
+        gmm = GMM(n_components=self.k, covariance_type='full')
         gmm.fit(K)
         #y = gmm.predict(K)
         Z = gmm.predict_proba(K)
