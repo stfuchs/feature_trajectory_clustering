@@ -13,11 +13,11 @@ from collections import defaultdict
 
 class ClusteringNode:
     def __init__(self):
-        self.sub = rospy.Subscriber("lk_kernel",KernelState,self.lk_callback,queue_size=1)
+        self.sub = rospy.Subscriber("lk_kernel", KernelState, self.lk_callback,
+                                    queue_size=1, buff_size=2**24)
         self.pub_image = rospy.Publisher("lk_kernel_matrix",Image,queue_size=1)
         self.pub_objs = rospy.Publisher("lk_objects",ObjectIds,queue_size=1)
         self.bridge = CvBridge()
-        self.n_cluster = 8
         self.probs = {}
         self.last_header = Header()
 
@@ -73,6 +73,7 @@ class ClusteringNode:
         return idx
 
     def lk_callback(self,kernel_state):
+        np.set_printoptions(precision=5, suppress=True)
         if kernel_state.header.stamp.to_sec() < self.last_header.stamp.to_sec():
             self.probs = {}
         self.last_header = kernel_state.header
@@ -80,7 +81,7 @@ class ClusteringNode:
         start = rospy.Time.now()
         n = len(kernel_state.ids)
         K = np.ones([n,n],dtype=np.float32)
-        print("start shape: {0}".format(K.shape))
+        print("start shape: %s" % str(K.shape))
         it = 0
         for i in range(n):
             for j in range(i+1,n):
@@ -88,11 +89,26 @@ class ClusteringNode:
                 K[j,i] = kernel_state.data[it]
                 it += 1
 
+        from sklearn.decomposition import PCA
+        #pca = PCA(n_components='mle')
+        pca = PCA(n_components=.999)
+        Kp = pca.fit(K).transform(K)
+        print("PCA components: %s" % pca.n_components_)
+        #print("PCA: \n%s"%pca.explained_variance_ratio_)
+        #print("%s" % np.cumsum(pca.explained_variance_ratio_))
+        for i,v in enumerate(pca.explained_variance_ratio_):
+            if v < .01: break
+        print("cluster: %s" % i)
+        print("PCA took %s sec" % (rospy.Time.now() - start).to_sec())
+        start = rospy.Time.now()
+
         from sklearn.mixture import GMM
-        gmm = GMM(n_components=self.n_cluster, covariance_type='full')
-        gmm.fit(K)
-        #y = gmm.predict(K)
-        Z = gmm.predict_proba(K)
+        gmm = GMM(n_components=self.k, covariance_type='full')
+        gmm.fit(Kp)
+        #y = gmm.predict(Kp)
+        #print("GMM: %s"%y)
+
+        Z = gmm.predict_proba(Kp)
         X = self.predict(kernel_state.ids)
         idx = self.indices(X,Z)
         self.update(Z[:,idx],X,kernel_state.ids)
@@ -103,9 +119,9 @@ class ClusteringNode:
         #spec.fit(K)
         #y = spec.labels_
 
-        print("Clustering took {0} sec".format( (rospy.Time.now() - start).to_sec() ))
+        print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
         self.publish_object_ids(ids,y)
-        self.publish_kernel_image(K,y)
+        self.publish_kernel_image(Kp,y)
 
     def publish_object_ids(self, ids, y):
         msg = ObjectIds()
