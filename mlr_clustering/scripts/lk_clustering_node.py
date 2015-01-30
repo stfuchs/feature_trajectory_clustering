@@ -51,6 +51,7 @@ class ClusteringNode:
     def maxmax(self, M):
         idx = [0]*self.k
         for fi in self.f:
+            np.argmax(M)
             i,j = np.unravel_index(fi(M),M.shape)
             M[i,:] = 0
             M[:,j] = 0
@@ -135,8 +136,6 @@ class ClusteringNode:
         prob = .4
         self.transition = np.ones([self.k,self.k])*(1.-prob)/(self.k-1.)
         self.transition[np.diag_indices_from(self.transition)] = prob
-        self.f = [np.argmax]*self.k
-
         return config
 
 if __name__ == '__main__':
