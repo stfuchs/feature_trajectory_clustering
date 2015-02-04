@@ -15,6 +15,8 @@ namespace Visualization
   {
     struct ColorRGB
     {
+      ColorRGB() : r(220),g(220),b(220) {}
+      ColorRGB(uint8_t _r, uint8_t _g, uint8_t _b) : r(_r),g(_g),b(_b) {}
       uint8_t r;
       uint8_t g;
       uint8_t b;
@@ -25,6 +27,27 @@ namespace Visualization
       uint16_t h;
       uint8_t s;
       uint8_t v;
+    };
+
+    const int N = 17;
+    const ColorRGB palette[17] = {
+      {231, 76, 60},
+      {46, 204, 113},
+      {155, 89, 182},
+      {241, 196, 15},
+      {52, 152, 219},
+      {52, 73, 94},
+      {230, 126, 34},
+      {26, 188, 156},
+      {224, 246, 53},
+      {149, 165, 166},
+      {245, 160, 167},
+      {218, 202, 143},
+      {141, 177, 115},
+      {199, 74, 108},
+      {101, 70, 65},
+      {54, 99, 120},
+      {146, 39, 41}
     };
 
     template<typename T> inline T min3 (const T& a, const T& b, const T& c) {

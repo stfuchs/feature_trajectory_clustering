@@ -21,28 +21,25 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include <mlr_msgs/TrajectoryPointUpdateArray.h>
+#include <mlr_msgs/Point3dArray.h>
 
-struct LucasKanadeTrackerNode
+struct LK3dTrackerNode
 {
   typedef pcl::PointXYZRGB Point;
   typedef pcl::PointCloud<Point> PointCloud;
   typedef typename PointCloud::Ptr PointCloudPtr;
   typedef typename PointCloud::ConstPtr PointCloudConstPtr;
 
-  LucasKanadeTrackerNode() 
-    : itopic_("camera/depth_registered/points") 
-    , otopic_("lk_points")
-    , it_(nh_)
-
-  { init(); }
-
-  void init()
+  LK3dTrackerNode() : it_(nh_)
   {
-    ROS_INFO("Subscribing to %s", itopic_.c_str());
-    sub_ = nh_.subscribe(itopic_,1,&LucasKanadeTrackerNode::callback,this);
-    pub_ = nh_.advertise<mlr_msgs::TrajectoryPointUpdateArray>(otopic_,1);
-    img_pub_ = it_.advertise("lk_image",1);
+    itopic_ = "camera/depth_registered/points";
+    otopic_ = "tracking/lk3d/points";
+    ROS_INFO("Default input pointcloud topic is %s", itopic_.c_str());
+    sub_ = nh_.subscribe(itopic_,1,&LK3dTrackerNode::callback,this);
+
+    ROS_INFO("Default output topic is: %s", otopic_.c_str());
+    pub_ = nh_.advertise<mlr_msgs::Point3dArray>(otopic_,1);
+    img_pub_ = it_.advertise("tracking/lk3d/image",1);
   }
 
   void callback(const PointCloudConstPtr& pc_msg)
@@ -118,10 +115,8 @@ struct LucasKanadeTrackerNode
     image.cols = 640;
     image.step[0] = 3*640;
 
-    mlr_msgs::TrajectoryPointUpdateArray update_array;
-    mlr_msgs::TrajectoryPointUpdate update;
+    mlr_msgs::Point3dArray update;
     update.header = last_header_;
-    bool need_init;
 
     for(size_t i=0; i<features_[1].size(); ++i)
     {
@@ -135,17 +130,16 @@ struct LucasKanadeTrackerNode
       if( p1(2) != p1(2) ) { continue; }
       if( (p0-p1).norm() > .1 ) { continue; }
 
-      update.point.x = p1(0);
-      update.point.y = p1(1);
-      update.point.z = p1(2);
-      update.id = i;
-      update_array.points.push_back(update);
+      update.x.push_back(p1(0));
+      update.y.push_back(p1(1));
+      update.z.push_back(p1(2));
+      update.ids.push_back(i);
       std::swap(p1,p0);
       cv::circle( image, features_[1][i], 3, cv::Scalar(0,255,0), -1, 8);
     }
-    if(!update_array.points.empty())
+    if(!update.ids.empty())
     {
-      pub_.publish(update_array);
+      pub_.publish(update);
       sensor_msgs::ImagePtr img_msg
         = cv_bridge::CvImage(last_header_,"bgr8",image).toImageMsg();
       img_pub_.publish(img_msg);
@@ -213,8 +207,8 @@ struct LucasKanadeTrackerNode
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "lucas_kanade_tracker");
-  LucasKanadeTrackerNode n;
+  ros::init(argc, argv, "lk3d_tracker");
+  LK3dTrackerNode n;
   ros::Rate r(30); // hz
   while (n.nh_.ok())
   {

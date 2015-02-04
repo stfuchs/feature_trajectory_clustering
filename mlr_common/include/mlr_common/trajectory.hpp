@@ -41,7 +41,7 @@ inline typename T::ValueT computeWeight(
   typename T::StateT const& x1, typename T::StateT const& x2, 
   typename T::TimeT const& t1, typename T::TimeT const& t2)
 {
-  typename T::StateT v = 100.*(x2-x1)/(t2-t1);
+  typename T::StateT v = T::scale*(x2-x1)/(t2-t1);
   return 1.-exp(-v.dot(v));
 }
 
@@ -61,6 +61,13 @@ struct PointTraits : DefaultTraits
   typedef Eigen::Matrix<float,3,1> StateT;
 };
 
+
+struct Point2dTraits : DefaultTraits
+{
+  typedef Eigen::Matrix<float,2,1> StateT;
+};
+
+
 struct PoseTraits : DefaultTraits
 {
   typedef Eigen::Matrix<float,3,1> PointT;
@@ -73,6 +80,7 @@ struct PoseTraits : DefaultTraits
   };
 };
 
+/*
 template<>
 inline PoseTraits::ValueT computeWeight<PoseTraits>(
   PoseTraits::StateT const& x1, PoseTraits::StateT const& x2,
@@ -81,15 +89,24 @@ inline PoseTraits::ValueT computeWeight<PoseTraits>(
   PoseTraits::PointT v = 100.*(x2.point-x1.point)/(t2-t1);
   return 1.-exp(-v.dot(v));
 }
-
+*/
 
 /***************************************************************************************
  *  Type Functions
  **************************************************************************************/
 
 // defines the dominant type:
+//  !!! 
+//  !!!  it is strongly recommended that you check if 
+//  !!!  the default fallback works for your case
+//  !!!
 template<typename T1, typename T2>
-struct trajectory_type_promotion {};
+struct trajectory_type_promotion
+{
+  typedef typename T1::ValueT res_distance_type;
+  typedef typename T1::TimeT res_time_type;
+  typedef typename T1::StateT res_state_type;
+};
 
 template<typename T>
 struct trajectory_type_promotion<T,T>

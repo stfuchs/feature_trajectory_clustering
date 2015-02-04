@@ -48,12 +48,11 @@ add_message_files(
   DIRECTORY
     msg
   FILES
-    TrajectoryPointUpdate.msg
-    TrajectoryPointUpdateArray.msg
-    TrajectoryPoseUpdate.msg
-    TrajectoryPoseUpdateArray.msg
     KernelState.msg
     ObjectIds.msg
+    Point2dArray.msg
+    Point3dArray.msg
+    Pose3dArray.msg
 )
 
 ## Generate services in the 'srv' folder

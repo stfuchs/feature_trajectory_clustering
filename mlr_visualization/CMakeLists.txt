@@ -5,8 +5,9 @@ project(mlr_visualization)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  mlr_msgs
   ar_track_alvar
+  cv_bridge
+  mlr_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -95,6 +96,7 @@ catkin_package(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
 )
 
 ## Declare a cpp library
@@ -103,14 +105,19 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(trajectory_visualization_node src/trajectory_visualization_node.cpp)
+add_executable(vis_3d src/vis_3d.cpp)
+add_executable(vis_2d src/vis_2d.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(visualization_node visualization_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(trajectory_visualization_node
+target_link_libraries(vis_3d
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(vis_2d
    ${catkin_LIBRARIES}
 )
 
@@ -161,3 +168,4 @@ target_link_libraries(trajectory_visualization_node
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+set(CMAKE_CXX_FLAGS "-Wall -g -std=c++0x ${CMAKE_CXX_FLAGS}")

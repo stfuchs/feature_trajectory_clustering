@@ -12,45 +12,44 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 
-#include <mlr_msgs/TrajectoryPointUpdateArray.h>
+#include <mlr_msgs/Point3dArray.h>
 #include <mlr_msgs/KernelState.h>
 #include <mlr_common/kernel.hpp>
 #include <mlr_common/tracker_types.hpp>
 
-struct LK_KernelNode
+struct LK3dKernelNode
 {
-  LK_KernelNode() : itopic("lk_points"), otopic("lk_kernel")
-  { init(); }
+  LK3dKernelNode()
+  { 
+    topic_traj_ = "tracking/lk3d/points";
+    topic_out_ = "tracking/kernel";
+    ROS_INFO("Default input Point3dArray topic is: %s", topic_traj_.c_str());
+    sub = nh.subscribe(topic_traj_,1,&LK3dKernelNode::lkCallback,this);
 
-  void init()
-  {
-    sub = nh.subscribe(itopic,1,&LK_KernelNode::lkCallback,this);
-    pub = nh.advertise<mlr_msgs::KernelState>(otopic,1);
+    ROS_INFO("Default output topic is: %s", topic_out_.c_str());
+    pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
   }
 
-  void lkCallback(mlr_msgs::TrajectoryPointUpdateArray const& updated)
+  void lkCallback(mlr_msgs::Point3dArray const& msg)
   {
-    if (updated.points[0].header.stamp < last_header.stamp)
+    if (msg.header.stamp < last_header.stamp)
     {
       ROS_INFO("Message timestamp older than previous: RESET");
       kernel.reset();
     }
-
-
-    last_header = updated.points[0].header;
+    last_header = msg.header;
 
     ros::Time start = ros::Time::now();
-    typename std::vector<mlr_msgs::TrajectoryPointUpdate>::const_iterator it;
-    for(it = updated.points.begin(); it != updated.points.end(); ++it)
+    for(size_t i=0; i<msg.ids.size(); ++i)
     {
-      LK_Tracker::IdT id(it->id);
-      LK_Tracker::StateT p(it->point.x, it->point.y, it->point.z);
-      LK_Tracker::TimeT t(it->header.stamp.toSec());
+      LK_Tracker::IdT id(msg.ids[i]);
+      LK_Tracker::StateT p(msg.x[i], msg.y[i], msg.z[i]);
+      LK_Tracker::TimeT t(msg.header.stamp.toSec());
       if (kernel.isNew(id)) kernel.newTrajectory(id,p,t);
       else kernel.updateTrajectory(id,p,t);
     }
     ROS_INFO("LK Update took %f", (ros::Time::now() - start).toSec());
-    publishKernelState(updated.points[0].header);
+    publishKernelState(msg.header);
   }
 
   void publishKernelState(const std_msgs::Header& header)
@@ -65,8 +64,8 @@ struct LK_KernelNode
   }
 
 
-  std::string itopic;
-  std::string otopic;
+  std::string topic_traj_;
+  std::string topic_out_;
 
   ros::NodeHandle nh;
   ros::Subscriber sub;
@@ -77,8 +76,8 @@ struct LK_KernelNode
 
 int main(int argc, char** argv)
 {
-  ros::init(argc,argv, "lk_kernel");
-  LK_KernelNode n;
+  ros::init(argc,argv, "lk3d_kernel");
+  LK3dKernelNode n;
   ros::Rate r(30);
   while (n.nh.ok())
   {

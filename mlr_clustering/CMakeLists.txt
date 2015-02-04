@@ -113,7 +113,8 @@ include_directories(
 
 ## Declare a cpp executable
 #add_executable(lk_clustering_node src/lk_clustering_node.cpp)
-add_executable(lk_kernel_node src/lk_kernel_node.cpp)
+add_executable(lk3d_kernel_node src/lk3d_kernel_node.cpp)
+add_executable(lk2d_kernel_node src/lk2d_kernel_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
@@ -124,7 +125,11 @@ add_executable(lk_kernel_node src/lk_kernel_node.cpp)
 #  ${catkin_LIBRARIES}
 #)
 
-target_link_libraries(lk_kernel_node
+target_link_libraries(lk3d_kernel_node
+  ${catkin_LIBRARIES}
+)
+
+target_link_libraries(lk2d_kernel_node
   ${catkin_LIBRARIES}
 )
 

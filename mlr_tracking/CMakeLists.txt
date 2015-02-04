@@ -6,9 +6,9 @@ project(mlr_tracking)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   ar_track_alvar
+  cv_bridge
   pcl_ros
   mlr_msgs
-  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -107,7 +107,8 @@ include_directories(
 # )
 
 ## Declare a cpp executable
-add_executable(lucas_kanade_tracker src/lucas_kanade_tracker.cpp)
+add_executable(lk3d_tracker src/lk3d_tracker.cpp)
+add_executable(lk2d_tracker src/lk2d_tracker.cpp)
 #add_executable(depth_lucas_kanade_tracker src/experimental_depth_lucas_kanade_tracker.cpp)
 
 ## Add cmake target dependencies of the executable/library
@@ -115,9 +116,13 @@ add_executable(lucas_kanade_tracker src/lucas_kanade_tracker.cpp)
 # add_dependencies(tracker_node tracker_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(lucas_kanade_tracker
+target_link_libraries(lk3d_tracker
   ${catkin_LIBRARIES}
 #   ${OpenCV_LIBRARIES}
+)
+
+target_link_libraries(lk2d_tracker
+  ${catkin_LIBRARIES}
 )
 
 #target_link_libraries(depth_lucas_kanade_tracker ${catkin_LIBRARIES})
@@ -169,3 +174,5 @@ target_link_libraries(lucas_kanade_tracker
 
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
+set(CMAKE_CXX_FLAGS "-Wall -g -std=c++0x ${CMAKE_CXX_FLAGS}")
+set(CMAKE_BUILD_TYPE Release)

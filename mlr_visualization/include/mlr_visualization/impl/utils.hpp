@@ -75,6 +75,6 @@ void Visualization::Utils::generateColor(int position, ColorRGB& out)
     v = 25+rand()%75;
     s = 25+rand()%75;
   }
-  ColorHSV hsv = {h,s,v};
+  ColorHSV hsv = {uint16_t(h),uint8_t(s),uint8_t(v)};
   hsv2rgb(hsv,out);
 }
