@@ -204,6 +204,30 @@ struct Kernel
     foreach_value(data,DistanceCalculator<T>(f),distances);
   }
 
+  template<typename T>
+  void collectGarbage(typename T::TimeT const& now)
+  {
+    auto it = cast_value<T>(data).begin();
+    while (it != cast_value<T>(data).end())
+    {
+      T& f = it->second;
+      typename dist_types<T>::distance_que& d = find(distances,it->first);
+      while(!f.t.empty() && (now - f.t.back() > T::timespan || f.t.size() > T::n_max))
+      {
+        f.w.pop_back();
+        f.t.pop_back();
+        f.x.pop_back();
+        d.pop_back();
+      }
+      if (f.t.size() < 1)
+      {
+        cast_key<typename T::IdT>(distances).erase(it->first);
+        it = cast_value<T>(data).erase(it);
+      }
+      else ++it;
+    }
+  }
+
   void computeKernelMatrix(Eigen::MatrixXf& K, MultiType<std::vector,id_types>& ids)
   {
     std::vector<float> result;

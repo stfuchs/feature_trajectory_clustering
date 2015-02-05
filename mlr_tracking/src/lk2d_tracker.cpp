@@ -70,8 +70,8 @@ struct LK2dTrackerNode
 
     mlr_msgs::Point2dArray msg;
     msg.header = img_msg->header;
-    msg.scale_x = .5*float(img_msg->width);
-    msg.scale_y = .5*float(img_msg->width);
+    msg.scale_x = 2./float(img_msg->width);
+    msg.scale_y = 2./float(img_msg->width);
     for (size_t i=0; i<f1.size(); ++i)
     {
       if (s[i] != 0)

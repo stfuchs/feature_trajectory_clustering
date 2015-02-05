@@ -44,7 +44,7 @@ struct LK2dKernelNode
     for(size_t i=0; i<msg.ids.size(); ++i)
     {
       LK2d_Tracker::IdT id(msg.ids[i]);
-      LK2d_Tracker::StateT p(msg.x[i]/msg.scale_x, msg.y[i]/msg.scale_y);
+      LK2d_Tracker::StateT p(msg.x[i]*msg.scale_x, msg.y[i]*msg.scale_y);
       LK2d_Tracker::TimeT t(msg.header.stamp.toSec());
       if (kernel.isNew(id)) kernel.newTrajectory(id,p,t);
       else kernel.updateTrajectory(id,p,t);
@@ -58,6 +58,7 @@ struct LK2dKernelNode
     ros::Time start = ros::Time::now();
     mlr_msgs::KernelState ks;
     ks.header = header;
+    kernel.collectGarbage<LK2d_Tracker>(header.stamp.toSec());
     kernel.computeKernelMatrixData(ks.data,ks.ids);
     std::cout<<"Kernel ids: "<<ks.ids.size()<<" data: "<<ks.data.size()<<std::endl;
     pub.publish(ks);

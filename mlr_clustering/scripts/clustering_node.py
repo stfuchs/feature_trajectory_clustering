@@ -51,14 +51,18 @@ class ClusteringNode:
     def update(self, X, Z, ids):
         res = X*Z
         for i,v in enumerate(ids):
-            self.probs[v] = res[i,:]/np.sum(res[i,:])
+            norm = np.sum(res[i,:])
+            if norm == 0:
+                for z in Z: print("%s"%z)
+            else:
+                self.probs[v] = res[i,:]/norm
 
     def maxmax(self, M):
         idx = [0]*self.k
         for ki in range(self.k):
             i,j = np.unravel_index(np.argmax(M),M.shape)
-            M[i,:] = 0
-            M[:,j] = 0
+            M[i,:] = -1.
+            M[:,j] = -1.
             idx[i]=j
         return idx
 
@@ -85,7 +89,7 @@ class ClusteringNode:
         start = rospy.Time.now()
         n = len(kernel_state.ids)
         K = np.ones([n,n],dtype=np.float32)
-        print("start shape: %s" % str(K.shape))
+        #print("start shape: %s" % str(K.shape))
         it = 0
         for i in range(n):
             for j in range(i+1,n):
@@ -104,31 +108,34 @@ class ClusteringNode:
         for k,v in enumerate(pca.explained_variance_ratio_):
             if v < .008: break
 
-        #k=7
+        k=max(1,k)
         if k > self.k:
             self.k = k
             self.transition = np.ones([k,k])*(1.-self.gamma)/(k-1.)
             self.transition[np.diag_indices_from(self.transition)] = self.gamma
 
-        print("PCA took %s sec" % (rospy.Time.now() - start).to_sec())
+        #print("PCA took %s sec" % (rospy.Time.now() - start).to_sec())
         print("cluster: %s, reduction: %s,%s" % (k,Kp.shape[0],Kp.shape[1]))
 
         start = rospy.Time.now()
         from sklearn.mixture import GMM
-
-        gmm = GMM(n_components=self.k, covariance_type='full')
+        gmm = GMM(n_components=k, covariance_type='full')
         gmm.fit(Kp)
 
-        #Z = np.zeros([n,self.k])
-        #Z[:,:k] = gmm.predict_proba(Kp)
-        Z = gmm.predict_proba(Kp)
+        Z = np.ones([n,self.k])*.0001
+        Z[:,:k] = gmm.predict_proba(Kp)
+        for i in range(n):
+            Z[i,:] = Z[i,:]/np.sum(Z[i,:])
+
+        #Z = gmm.predict_proba(Kp)
         X = self.predict(kernel_state.ids)
         idx = self.indices(X,Z)
+        #print(idx)
         self.update(X, Z[:,idx], kernel_state.ids)
-        ids = list(self.probs.keys())
+        ids = kernel_state.ids #list(self.probs.keys())
         y = self.getLabels(ids)
 
-        print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
+        #print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
         self.publish_object_ids(ids,y)
         self.publish_kernel_image(Kp,self.getLabels(kernel_state.ids))
         self.publish_probabilities(ids)
@@ -158,8 +165,8 @@ class ClusteringNode:
         for i,v in enumerate(np.sort(ids)):
             p = self.probs[v]
             X[i,:len(p)] = p
-        #size = (self.k*32, len(ids)*5)
-        size = (256,800)
+        size = (self.k*32, len(ids)*10)
+        #size = (256,800)
         img = np.array(self.cmap.to_rgba(X)[:,:,:3]*255, dtype=np.uint8)
         img_scaled = cv2.resize(img,size,interpolation=cv2.INTER_NEAREST)
         self.pub_probs.publish(self.bridge.cv2_to_imgmsg(img_scaled,'rgb8'))
