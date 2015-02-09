@@ -23,7 +23,7 @@ struct LK_Tracker : Trajectory<PointTraits,LK_Tracker>
 
   LK_Tracker(IdT const& id_) : Base(id_) {}
 
-  static const int32_t type_id = 0;
+  static const int32_t type_id = 1;
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
   static const float scale;
@@ -52,7 +52,7 @@ struct LK2d_Tracker : Trajectory<Point2dTraits,LK2d_Tracker>
 
   LK2d_Tracker(IdT const& id_) : Base(id_) {}
 
-  static const int32_t type_id = 1;
+  static const int32_t type_id = 0;
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
   static const float scale;

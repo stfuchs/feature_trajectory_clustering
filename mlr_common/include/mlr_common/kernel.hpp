@@ -69,13 +69,13 @@ struct MatrixCalculator
       if (outer.t[i] >= inner.t.front()) continue;
       if (outer.t[i] < inner.t.back()) break;
       DistanceT const d = find(que_outer[i],inner.id);
-      if(outer.w[i]!=outer.w[i]) std::cout << "w is nan" << std::endl;
+      //if(outer.w[i]!=outer.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
       sum += outer.w[i]*d;
       sum_sqr += outer.w[i]*d*d;
       sum_w += outer.w[i];
     }
-    if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
+    //if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
 
     auto& que_inner = find(distances,inner.id);
     for(unsigned int i=0; i<que_inner.size(); ++i) // iterate inner distances
@@ -83,18 +83,21 @@ struct MatrixCalculator
       if (inner.t[i] >= outer.t.front()) continue;
       if (inner.t[i] < outer.t.back()) break;
       DistanceT const d = find(que_inner[i],outer.id);
-      if(inner.w[i]!=inner.w[i]) std::cout << "w is nan" << std::endl;
+      //if(inner.w[i]!=inner.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
       sum += inner.w[i]*d;
       sum_sqr += inner.w[i]*d*d;
       sum_w += inner.w[i];
     }
-    if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
+    //if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
 
-    if(sum_w!=0) {
+    //if(sum_w*10.>n)
+    if(sum_w>0)
+    {
       double n_inv = 1./sum_w;
-      if(sum*sum != sum*sum) std::cout << "sum*sum is nan" << std::endl;
-      result.push_back( exp(-.5*(T1::scale+T2::scale)*(sum_sqr - sum*sum*n_inv)*n_inv) );
+      //if(sum*sum != sum*sum) std::cout << "sum*sum is nan" << std::endl;
+      //result.push_back( exp(-.5*(T1::scale+T2::scale)*(sum_sqr - sum*sum*n_inv)*n_inv) );
+      result.push_back( exp(-10000.*(sum_sqr - sum*sum*n_inv)*n_inv) );
     }
     else {
       result.push_back( .5 );

@@ -31,7 +31,7 @@ struct Vis2dNode
     ROS_INFO("Default input image topic is: %s", topic_img_.c_str());
     ROS_INFO("Default input Point2dArray topic is: %s", topic_traj_.c_str());
     ROS_INFO("Default input ObjectIds topic is: %s", topic_obj_.c_str());
-    sub_img_ = it_.subscribe(topic_img_, 1, &Vis2dNode::image_cb, this);
+    sub_img_ = it_.subscribe(topic_img_, 10, &Vis2dNode::image_cb, this);
     sub_traj_ = nh_.subscribe(topic_traj_, 1, &Vis2dNode::trajectory_cb, this);
     sub_objects_ = nh_.subscribe(topic_obj_, 1, &Vis2dNode::object_cb, this);
 
@@ -57,12 +57,17 @@ struct Vis2dNode
     {
       if (img_queue.front()->header.stamp >= msg.header.stamp)
       {
-        *img = *(img_queue.front());
+        img->image = img_queue.front()->image;
+        img->header = img_queue.front()->header;
+        img->encoding = img_queue.front()->encoding;
         break;
       }
-      img_queue.pop();
+      else
+      {
+        img_queue.pop();
+      }
     }
-    if(!img)
+    if(img_queue.empty())
     {
       ROS_WARN("Image Queue empty! No image received yet.");
       return;
@@ -84,8 +89,9 @@ struct Vis2dNode
     for(int i=0; i<int(msg.offsets.size())-1; ++i)
     {
       Visualization::Utils::ColorRGB c;
-      if (i<Visualization::Utils::N)
-        c = Visualization::Utils::palette[i];
+      int l = msg.labels[i];
+      if (l<Visualization::Utils::N)
+        c = Visualization::Utils::palette[l];
 
       for(int j=msg.offsets[i]; j<msg.offsets[i+1]; ++j)
       {

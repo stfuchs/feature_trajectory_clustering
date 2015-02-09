@@ -41,8 +41,8 @@ inline typename T::ValueT computeWeight(
   typename T::StateT const& x1, typename T::StateT const& x2, 
   typename T::TimeT const& t1, typename T::TimeT const& t2)
 {
-  typename T::StateT v = T::scale*(x2-x1)/(t2-t1);
-  return 1.-exp(-v.dot(v));
+  typename T::StateT v = (x2-x1)/(t2-t1);
+  return 1.-exp(-100.*v.dot(v));
 }
 
 

@@ -7,6 +7,7 @@
 
 Header header
 int32[] offsets
+int32[] labels
 int64[] ids 
 
 # int64[] ids consists of combined tracker and trajectory ids

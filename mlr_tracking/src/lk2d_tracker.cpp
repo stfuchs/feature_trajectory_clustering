@@ -51,7 +51,7 @@ struct LK2dTrackerNode
 
     if (features.size() < 10)
     {
-      cv::goodFeaturesToTrack(img1->image, f0, 300, 0.01, 10, cv::Mat(), 3, false, 0.04);
+      cv::goodFeaturesToTrack(img1->image, f0, 100, 0.01, 10, cv::Mat(), 3, false, 0.04);
       cv::cornerSubPix(img1->image, f0, cv::Size(10,10), cv::Size(-1,-1), termcrit);
       ROS_INFO("Initialized new features: %zu",f0.size());
       for (size_t i=0; i<f0.size(); ++i) ids.push_back(id_count++);

@@ -26,10 +26,36 @@ to play the raw bagfiles, start the openni node first without loading the device
 
    roslaunch openni_launch openni.launch load_driver:=false
 
-the play the rosbag file. To extract trajectories, start
+to use the camera feed from the Kinect_
 
-   rosrun python_doodles save_trajectories_to_file.py
+   roslaunch openni_launch openni.launch depth_registration:=true
 
-before playing the bagfile. When the bagfile is finished call the service
+# openni issues
+### Error: No devices connected.... waiting for devices to be connected
+build depends of ros openni_camera package:
+on Ubuntu 14.04.01:
+    libopenni-dev (1.5.4.0-7)
+    libopenni-sensor-primesense-dev (5.1.0.41-3)
 
-   rosservice call /save_lk_points "prefix: '/path/to/destination/'"
+but we need
+    libopenni-sensor-primesense-dev (5.1.2.1)
+ 
+get it from:
+    https://github.com/avin2/SensorKinect
+or do:
+    wget https://github.com/avin2/SensorKinect/archive/unstable.zip
+    unzip unstable.zip
+    cd SensorKinect-unstable/Bin
+for 64-bit:
+    tar vxf SensorKinect093-Bin-Linux-x64-v5.1.2.1.tar.bz2
+    cd Sensor-Bin-Linux-x64-v5.1.2.1
+    sudo ./install.sh
+
+for 32-bit:
+    tar vxf SensorKinect093-Bin-Linux-x86-v5.1.2.1.tar.bz2
+    cd Sensor-Bin-Linux-x86-v5.1.2.1
+    sudo ./install.sh
+
+After the installation, a system reboot might help, too.
+
+taken from http://answers.ros.org/question/60562/ubuntu-12042-and-openni_launch-not-detecting-kinect-after-update/
