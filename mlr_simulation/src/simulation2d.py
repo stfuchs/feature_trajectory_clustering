@@ -103,6 +103,7 @@ class Simulation:
         self.objects = objs
         map(lambda o,c : o.setColor(c), self.objects, color_palette[:len(objs)])
         self.msg.ids = range(np.sum(map(lambda o: len(o.points), objs)))
+        return self
 
     def run(self):
         print("Running...")
