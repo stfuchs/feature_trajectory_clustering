@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
+import rosparam
 from mlr_msgs.msg import Point2dArray
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header
@@ -28,13 +29,19 @@ color_palette = [(231,  76,  60),
                  (146,  39,  41)]
 
 class Object:
-    def __init__(self, pos, dist=(.05,.05), n=8, noise=.001):
-        self.dist = np.array(dist)
+    """Object defines a set of point trajectories that move together. Available parameters are:
+    pos: [[x0,y0],[x1,y1]] # key positions of the trajectory (specify at least 2 here)
+    dim: [dx,dy] # dimensions of the object, specifies the initial measurement distribution
+    n: n # number of measurement points, default: 8
+    noise: sigma # tracker noise, applied in each frame, default: .001
+    """
+    def __init__(self, pos, dim=(.05,.05), n=8, noise=.001):
+        self.dist = np.array(dim)
         self.x = np.array(pos[0])
         self.v = np.diff(pos,axis=0)*(len(pos)-1)
         self.forward()
         self.c = (220,220,220)
-        self.points = self.x + np.random.rand(n,len(self.x))*2.*dist-dist
+        self.points = self.x + np.random.rand(n,len(self.x))*2.*dim-dim
         self.err = lambda: np.random.randn(n,len(self.x))*noise
 
     def forward(self):
@@ -70,26 +77,37 @@ class Object:
 
 
 class Simulation:
-    def __init__(self, duration, objects, dims=(640,480)):
+    """Simulation represents the world, configuration parameters are:
+    duration: 16 # duration for the specified trajectories in seconds
+    rate: 15 # hz of publishing images and trajectories
+    resolution: [640,480] # image resolution the above dimensions are scaled to
+    suppress_points: False # set True if you only want the image published
+    """
+    def __init__(self, duration, rate=15, resolution=(640,480), suppress_points=False):
         global color_palette
 
         self.pub_image = rospy.Publisher("camera/rgb/image_color",Image,queue_size=1)
         self.pub_points = rospy.Publisher("tracking/lk2d/points",Point2dArray,queue_size=1)
         self.br = CvBridge()
         self.start = rospy.Time.now()
-        self.duration = duration
-        self.objects = objects
-        map(lambda o,c : o.setColor(c), self.objects, color_palette[:len(objects)])
-        self.dims = dims
+        self.duration = rospy.Duration.from_sec(duration)
+        self.rate = rospy.Rate(rate)
+        self.resolution = resolution
+        self.suppress = suppress_points
         self.msg = Point2dArray()
         self.msg.header.frame_id = 'camera_rgb_optical_frame'
-        self.msg.scale_x = 1./self.dims[0]
-        self.msg.scale_y = 1./self.dims[1]
-        self.msg.ids = range(np.sum(map(lambda o: len(o.points), objects)))
+        self.msg.scale_x = 1./self.resolution[0]
+        self.msg.scale_y = 1./self.resolution[1]
 
-    def run(self, rate):
+    def set_objects(self, objs):
+        self.objects = objs
+        map(lambda o,c : o.setColor(c), self.objects, color_palette[:len(objs)])
+        self.msg.ids = range(np.sum(map(lambda o: len(o.points), objs)))
+
+    def run(self):
+        print("Running...")
         while not rospy.is_shutdown():
-            img = np.ones([self.dims[1],self.dims[0],3],np.uint8)*255
+            img = np.ones([self.resolution[1],self.resolution[0],3],np.uint8)*255
             dt = (rospy.Time.now() - self.start).to_sec()/self.duration.to_sec()
             if dt >= 1.:
                 dt, self.start = 0, rospy.Time.now()
@@ -98,31 +116,64 @@ class Simulation:
 
             map(lambda o: o.update(dt).draw(img), self.objects)
             self.msg.header.stamp = rospy.Time.now()
-            self.msg.x,self.msg.y = map(list,np.vstack([ self.dims*o.points for o in self.objects ]).T)
+            self.msg.x,self.msg.y = \
+              map(list,np.vstack([ self.resolution*o.points for o in self.objects ]).T)
             img_msg = self.br.cv2_to_imgmsg(img,'rgb8')
             img_msg.header = self.msg.header
             self.pub_image.publish(img_msg)
-            rate.sleep()
-            self.pub_points.publish(self.msg)
+            self.rate.sleep()
+            if not self.suppress:
+                self.pub_points.publish(self.msg)
 
 
 if __name__ == '__main__':
+    import sys
+    if len(sys.argv) != 2 :
+        print("Please specify exactly one simulation scenario config yaml file. Thank you.")
+        exit(0)
+
     rospy.init_node('simulation2d_node')
-
-    objects1 = [Object(pos=[(.5,.5),(.5,.5)], dist=(.45,.45), n=20, noise=.0005),
-                Object(pos=[(.3,.3),(.5,.5),(.5,.5),(.8,.3)], dist=(.1,.05), n=10, noise=.001),
-                Object(pos=[(.8,.1),(.8,.8)], dist=(.05,.05), n=5, noise=.001)]
-
-    objects2 = [Object(pos=[(.5,.5),(.5,.5)], dist=(.45,.45), n=50, noise=.0005),
-                Object(pos=[(.1,.2),(.3,.2),(.5,.2),(.7,.2),(.9,.2),(.9,.2),(.9,.2),(.9,.2)],n=20),
-                Object(pos=[(.1,.4),(.1,.4),(.3,.4),(.5,.4),(.7,.4),(.9,.4),(.9,.4),(.9,.4)],n=20),
-                Object(pos=[(.1,.6),(.1,.6),(.1,.6),(.3,.6),(.5,.6),(.7,.6),(.9,.6),(.9,.6)],n=20),
-                Object(pos=[(.1,.8),(.1,.8),(.1,.8),(.1,.8),(.3,.8),(.5,.8),(.7,.8),(.9,.8)],n=20)]
-
-    sim = Simulation(rospy.Duration.from_sec(16), objects2)
+    param,ns = rosparam.load_file(sys.argv[1])[0]
+    try:
+        objects = [ Object(**p) for p in param['objects'] ]
+    except NameError as e:
+        print("Couldn't instantiate objects.")
+        print("Something seems wrong with the objects section of your yaml file:")
+        print("\t%s"%e)
+        exit(0)
+    except TypeError as e:
+        print("Couldn't instantiate objects.")
+        print("Something seems wrong with the objects section of your yaml file:")
+        print("\t%s"%e)
+        print(Object.__doc__)
+        exit(0)
+    except:
+        print(sys.exc_info())
+        raise
+    print("Object creation successful. (%s objects loaded)" % len(objects))
 
     try:
-        sim.run(rospy.Rate(15))
+        sim = Simulation(**param['world'])
+    except NameError as e:
+        print("Couldn't instantiate simulation.")
+        print("Something seems wrong with the world section of your yaml file.")
+        print("\t%s"%e)
+        exit(0)
+    except TypeError as e:
+        print("Couldn't instantiate simulation.")
+        print("Something seems wrong with the world section of your yaml file.")
+        print("\t%s"%e)
+        print(Simulation.__doc__)
+        exit(0)
+    except:
+        print(sys.exc_info())
+        raise
+
+    sim.set_objects(objects)
+    print("Simulator creation successful.")
+
+    try:
+        sim.run()
     except rospy.ROSInterruptException:
         pass
     
