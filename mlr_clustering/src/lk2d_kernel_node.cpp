@@ -29,6 +29,8 @@ struct LK2dKernelNode
 
     ROS_INFO("Default output topic is: %s", topic_out_.c_str());
     pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
+    nh.param<LK2d_Tracker::TimeT>("tracking/kernel/timespan", LK2d_Tracker::timespan, 10.);
+    ROS_INFO("Selected time window for kernel: %f", LK2d_Tracker::timespan);
   }
 
   void lkCallback(mlr_msgs::Point2dArray const& msg)

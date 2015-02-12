@@ -71,6 +71,16 @@ class ClusteringNode:
     def getLabels(self, ids):
         return [ np.argmax(self.probs[i]) for i in ids ]
 
+    def PCA(self,K):
+        pca = PCA(n_components=.999)
+        Kp = pca.fit(K).transform(K)
+        if pca.explained_variance_ratio_[0] < 2./K.shape[0]:
+            print("Something is wrong with the kernel matrix. PCA:\n%s"
+                  % pca.explained_variance_ratio_)
+            print("Skip this one.")
+            return False,Kp
+        return True,Kp
+
     def lk_callback(self,kernel_state):
         np.set_printoptions(precision=5, suppress=True)
         if kernel_state.header.stamp.to_sec() < self.last_header.stamp.to_sec():
@@ -81,15 +91,10 @@ class ClusteringNode:
         start = rospy.Time.now()
         n = len(kernel_state.ids)
         K = symmetric(kernel_state.data,n)
+        pca_success = False
         Kp = K
-        #pca = PCA(n_components=.999)
-        #Kp = pca.fit(K).transform(K)
-        #if pca.explained_variance_ratio_[0] < 2./n:
-        #    print("Something is wrong with the kernel matrix. PCA:\n%s"
-        #          % pca.explained_variance_ratio_)
-        #    print("Skip this one.")
-        #    return
-        #print("PCA took %s sec" % (rospy.Time.now() - start).to_sec())
+        #pca_success, Kp = self.PCA(K)
+        #if not pca_success: return
 
         start = rospy.Time.now()
         k = range(max(1,self.k_last-1), self.k_last+2)
@@ -121,7 +126,7 @@ class ClusteringNode:
 
         print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
         self.publish_object_ids(ids,y)
-        self.publish_kernel_image(Kp,ids)
+        self.publish_kernel_image(Kp,ids, not pca_success)
         self.publish_probabilities(ids)
 
     def publish_object_ids(self, ids, y):
@@ -139,12 +144,15 @@ class ClusteringNode:
         msg.offsets.append(len(y))
         self.pub_objs.publish(msg)
 
-    def publish_kernel_image(self, K, ids):
+    def publish_kernel_image(self, K, ids, sort=True):
         cmap_kernel = cm.ScalarMappable(norm=colors.Normalize(vmin=0,vmax=1.),
                                         cmap=plt.get_cmap("RdBu"))
         idx = np.argsort(np.array(ids))
-        Ksorted = K[idx,:]
-        Ksorted = Ksorted[:,idx]
+        if sort:
+            Ksorted = K[idx,:]
+            Ksorted = Ksorted[:,idx]
+        else:
+            Ksorted = K
         img = np.array(self.cmap.to_rgba(Ksorted)[:,:,:3]*255, dtype=np.uint8)
         img_scaled = cv2.resize(img,(640,640),interpolation=cv2.INTER_NEAREST)
         self.pub_image.publish(self.bridge.cv2_to_imgmsg(img_scaled,'rgb8'))

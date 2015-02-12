@@ -41,6 +41,7 @@ inline typename T::ValueT computeWeight(
   typename T::StateT const& x1, typename T::StateT const& x2, 
   typename T::TimeT const& t1, typename T::TimeT const& t2)
 {
+  //return 1.;
   typename T::StateT v = (x2-x1)/(t2-t1);
   return 1.-exp(-100.*v.dot(v));
 }
@@ -144,13 +145,16 @@ struct trajectory_policy
   typedef typename trajectory_type_promotion<T1,T2>::res_state_type StateT;
 
   inline static DistanceT distance(typename T1::StateT const& xi,
-                                   typename T2::StateT const& xj) {
+                                   typename T2::StateT const& xj)
+  {
     return (xi - xj).squaredNorm();
+    return (xi - xj).norm();
   }
 
   inline static StateT lin_inter(typename T1::StateT const& x1,
                                  typename T2::StateT const& x2,
-                                 TimeT const & a) {
+                                 TimeT const & a)
+  {
     return a*x1 + (1.-a)*x2;
   }
 };
@@ -161,6 +165,7 @@ trajectory_policy<PoseTraits,PoseTraits>::distance(
   PoseTraits::StateT const& xi,PoseTraits::StateT const& xj)
 {
   return (xi.point - xj.point).squaredNorm();
+  return (xi.point - xj.point).norm();
 }
 
 template<>
@@ -169,6 +174,7 @@ trajectory_policy<PointTraits,PoseTraits>::distance(
   PointTraits::StateT const& xi,PoseTraits::StateT const& xj)
 {
   return (xi - xj.point).squaredNorm();
+  return (xi - xj.point).norm();
 }
 
 template<>
@@ -177,6 +183,7 @@ trajectory_policy<PoseTraits,PointTraits>::distance(
   PoseTraits::StateT const& xi,PointTraits::StateT const& xj)
 {
   return (xi.point - xj).squaredNorm();
+  return (xi.point - xj).norm();
 }
 
 template<>

@@ -71,8 +71,8 @@ struct MatrixCalculator
       DistanceT const d = find(que_outer[i],inner.id);
       //if(outer.w[i]!=outer.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
-      sum += outer.w[i]*d;
-      sum_sqr += outer.w[i]*d*d;
+      sum += outer.w[i]*sqrt(d);
+      sum_sqr += outer.w[i]*d;//*d;
       sum_w += outer.w[i];
     }
     //if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
@@ -85,8 +85,8 @@ struct MatrixCalculator
       DistanceT const d = find(que_inner[i],outer.id);
       //if(inner.w[i]!=inner.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
-      sum += inner.w[i]*d;
-      sum_sqr += inner.w[i]*d*d;
+      sum += inner.w[i]*sqrt(d);
+      sum_sqr += inner.w[i]*d;//*d;
       sum_w += inner.w[i];
     }
     //if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;

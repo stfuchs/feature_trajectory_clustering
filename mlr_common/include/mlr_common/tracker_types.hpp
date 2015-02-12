@@ -27,11 +27,11 @@ struct LK_Tracker : Trajectory<PointTraits,LK_Tracker>
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
   static const float scale;
-  static const typename Base::TimeT timespan;
+  static typename Base::TimeT timespan;// = 10. ;
 };
 
 const float LK_Tracker::scale = 100.;
-const typename LK_Tracker::Base::TimeT LK_Tracker::timespan = 10.;
+typename LK_Tracker::Base::TimeT LK_Tracker::timespan = 10.;
 
 
 template<typename T>
@@ -56,11 +56,11 @@ struct LK2d_Tracker : Trajectory<Point2dTraits,LK2d_Tracker>
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
   static const float scale;
-  static const typename Base::TimeT timespan;
+  static typename Base::TimeT timespan;// = 10.;
 };
 
 const float LK2d_Tracker::scale = 100.;
-const typename LK2d_Tracker::Base::TimeT LK2d_Tracker::timespan = 10.;
+typename LK2d_Tracker::Base::TimeT LK2d_Tracker::timespan = 10.;
 
 
 template<typename T>
@@ -86,11 +86,11 @@ struct QR_Tracker : Trajectory<PoseTraits,QR_Tracker>
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
   static const float scale;
-  static const typename Base::TimeT timespan;
+  static typename Base::TimeT timespan;// = 10.;
 };
 
 const float QR_Tracker::scale = 100.;
-const typename QR_Tracker::Base::TimeT QR_Tracker::timespan = 10.;
+typename QR_Tracker::Base::TimeT QR_Tracker::timespan = 10.;
 
 
 template<typename T>
