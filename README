@@ -59,3 +59,27 @@ for 32-bit:
 After the installation, a system reboot might help, too.
 
 taken from http://answers.ros.org/question/60562/ubuntu-12042-and-openni_launch-not-detecting-kinect-after-update/
+
+# 2D Simulator
+start the kernel
+   rosrun mlr_clustering lk2d_kernel_node
+
+start clustering node
+   rosrun mlr_clustering clustering_node.py
+
+start 2D visualization
+   rosrun mlr_visualization vis_2d
+
+start simulator
+   roscd mlr_simulation
+   rosrun mlr_simulation simulation2d.py yaml/one_of_the_scenario_config_files.yaml
+
+there are a couple of visualization topics that can be used with rviz
+or any other image viewer. You might want to subscribe to:
+   tracking/lk2d/image
+   tracking/kernel_matrix
+   tracking/probabilites
+
+to change the kernel time window, e.g. to 5 seconds [default is 10s] use
+   rosparam set /tracking/kernel/timespan 5.
+and restart lk2d_kernel_node

@@ -172,7 +172,8 @@ if __name__ == '__main__':
 
     sim.set_objects(objects)
     print("Simulator creation successful.")
-
+    print("Default output points [mlr_msgs::Point2dArray], topic is: tracking/lk2d/points")
+    print("Default output images [sensor_msgs::Image], topic is: camera/rgb/image_color")
     try:
         sim.run()
     except rospy.ROSInterruptException:

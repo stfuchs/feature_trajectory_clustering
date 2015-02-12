@@ -41,6 +41,10 @@ class ClusteringNode:
         self.pub_image = rospy.Publisher("tracking/kernel_matrix",Image,queue_size=1)
         self.pub_objs = rospy.Publisher("tracking/objects",ObjectIds,queue_size=1)
         self.pub_probs = rospy.Publisher("tracking/probabilities",Image,queue_size=1)
+        print("Default input [mlr_msgs::KernelState], topic is: tracking/kernel")
+        print("Default output objects [mlr_msgs::ObjectIds], topic is: tracking/objects")
+        print("Default output kernel matrix [sensor_msgs::Image], topic is: tracking/kernel_matrix")
+        print("Default output probabilities [sensor_msgs::Image], topic is: tracking/probabilities")
         self.bridge = CvBridge()
         self.probs = {}
         self.k = 1
