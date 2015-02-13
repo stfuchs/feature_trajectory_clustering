@@ -41,6 +41,7 @@
   <!--   <test_depend>gtest</test_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>mlr_msgs</build_depend>
+  <build_depend>std_msgs</build_depend>
 
   <build_depend>ar_track_alvar</build_depend>
   <run_depend>ar_track_alvar</run_depend>

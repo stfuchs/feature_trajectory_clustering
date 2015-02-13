@@ -12,7 +12,7 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
-
+#include <std_msgs/Bool.h>
 #include <mlr_msgs/Point2dArray.h>
 #include <mlr_msgs/KernelState.h>
 #include <mlr_common/kernel.hpp>
@@ -26,6 +26,7 @@ struct LK2dKernelNode
     topic_out_ = "tracking/kernel";
     ROS_INFO("Default input Point2dArray topic is: %s", topic_traj_.c_str());
     sub = nh.subscribe(topic_traj_,1,&LK2dKernelNode::lkCallback,this);
+    sub_reset = nh.subscribe("tracking/reset_all",1,&LK2dKernelNode::reset,this);
 
     ROS_INFO("Default output topic is: %s", topic_out_.c_str());
     pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
@@ -33,13 +34,22 @@ struct LK2dKernelNode
     ROS_INFO("Selected time window for kernel: %f", LK2d_Tracker::timespan);
   }
 
+  void reset(std_msgs::Bool const& msg = std_msgs::Bool())
+  {
+    if (msg.data)
+    {
+      ROS_INFO("RESET");
+      kernel.reset();
+    }
+  }
+
   void lkCallback(mlr_msgs::Point2dArray const& msg)
   {
     if (msg.header.stamp < last_header.stamp)
     {
-      ROS_INFO("Message timestamp older than previous: RESET");
-      kernel.reset();
+      reset();
     }
+
     last_header = msg.header;
 
     ros::Time start = ros::Time::now();
@@ -73,6 +83,7 @@ struct LK2dKernelNode
 
   ros::NodeHandle nh;
   ros::Subscriber sub;
+  ros::Subscriber sub_reset;
   ros::Publisher pub;
   Kernel<LK2d_Tracker> kernel;
   std_msgs::Header last_header;

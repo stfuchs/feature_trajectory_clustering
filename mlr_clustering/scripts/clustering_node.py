@@ -3,7 +3,7 @@
 import rospy
 from mlr_msgs.msg import KernelState, ObjectIds
 from sensor_msgs.msg import Image
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Bool
 
 import cv2
 import numpy as np
@@ -36,6 +36,8 @@ def symmetric(arr, n):
 
 class ClusteringNode:
     def __init__(self):
+        self.sub_reset = rospy.Subscriber("tracking/reset_all", Bool,
+                                         self.reset, queue_size=1)
         self.sub = rospy.Subscriber("tracking/kernel", KernelState, self.lk_callback,
                                     queue_size=1, buff_size=2**24)
         self.pub_image = rospy.Publisher("tracking/kernel_matrix",Image,queue_size=1)
@@ -46,15 +48,18 @@ class ClusteringNode:
         print("Default output kernel matrix [sensor_msgs::Image], topic is: tracking/kernel_matrix")
         print("Default output probabilities [sensor_msgs::Image], topic is: tracking/probabilities")
         self.bridge = CvBridge()
-        self.probs = {}
-        self.k = 1
-        self.k_last = 1
+        self.reset(True)
         self.gamma = .4
-        self.transition = np.ones([1,1])
-        self.last_header = Header()
 
         self.cmap = cm.ScalarMappable(norm=colors.Normalize(vmin=.0,vmax=1.),
                                       cmap=plt.get_cmap("RdBu"))
+
+    def reset(self, msg):
+        self.probs = {}
+        self.k = 1
+        self.k_last = 1
+        self.transition = np.ones([1,1])
+        self.last_header = Header()
 
     def predict(self, ids):
         X = np.zeros([len(ids),self.k])
@@ -166,8 +171,7 @@ class ClusteringNode:
         for i,v in enumerate(np.sort(ids)):
             p = self.probs[v]
             X[i,:len(p)] = p
-        size = (self.k*32, len(ids)*10)
-        #size = (256,800)
+        size = (256, 640)
         img = np.array(self.cmap.to_rgba(X)[:,:,:3]*255, dtype=np.uint8)
         img_scaled = cv2.resize(img,size,interpolation=cv2.INTER_NEAREST)
         self.pub_probs.publish(self.bridge.cv2_to_imgmsg(img_scaled,'rgb8'))

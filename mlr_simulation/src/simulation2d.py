@@ -4,7 +4,7 @@ import rospy
 import rosparam
 from mlr_msgs.msg import Point2dArray
 from sensor_msgs.msg import Image
-from std_msgs.msg import Header
+from std_msgs.msg import Header, Bool
 
 import cv2
 import numpy as np
@@ -76,8 +76,8 @@ class Object:
         return self
 
 
-class Simulation:
-    """Simulation represents the world, configuration parameters are:
+class World:
+    """World represents the world, configuration parameters are:
     duration: 16 # duration for the specified trajectories in seconds
     rate: 15 # hz of publishing images and trajectories
     resolution: [640,480] # image resolution the above dimensions are scaled to
@@ -105,77 +105,126 @@ class Simulation:
         self.msg.ids = range(np.sum(map(lambda o: len(o.points), objs)))
         return self
 
-    def run(self):
-        print("Running...")
-        while not rospy.is_shutdown():
-            img = np.ones([self.resolution[1],self.resolution[0],3],np.uint8)*255
-            dt = (rospy.Time.now() - self.start).to_sec()/self.duration.to_sec()
-            if dt >= 1.:
-                dt, self.start = 0, rospy.Time.now()
-                map(lambda o : o.toggle(), self.objects)
-                continue
-
-            map(lambda o: o.update(dt).draw(img), self.objects)
-            self.msg.header.stamp = rospy.Time.now()
-            self.msg.x,self.msg.y = \
-              map(list,np.vstack([ self.resolution*o.points for o in self.objects ]).T)
-            img_msg = self.br.cv2_to_imgmsg(img,'rgb8')
-            img_msg.header = self.msg.header
-            self.pub_image.publish(img_msg)
+    def spinOnce(self):
+        img = np.ones([self.resolution[1],self.resolution[0],3],np.uint8)*255
+        dt = (rospy.Time.now() - self.start).to_sec()/self.duration.to_sec()
+        if dt >= 1.:
+            dt, self.start = 0, rospy.Time.now()
+            map(lambda o : o.toggle(), self.objects)
             self.rate.sleep()
-            if not self.suppress:
-                self.pub_points.publish(self.msg)
+            return
 
+        map(lambda o: o.update(dt).draw(img), self.objects)
+        self.msg.header.stamp = rospy.Time.now()
+        self.msg.x,self.msg.y = \
+            map(list,np.vstack([ self.resolution*o.points for o in self.objects ]).T)
+        img_msg = self.br.cv2_to_imgmsg(img,'rgb8')
+        img_msg.header = self.msg.header
+        self.pub_image.publish(img_msg)
+        self.rate.sleep()
+        if not self.suppress:
+            self.pub_points.publish(self.msg)
+
+class Simulator:
+    def __init__(self):
+        self.sub = rospy.Subscriber("tracking/reset_all", Bool, 
+                                    self.stop, queue_size=1)
+        self.has_stopped = True
+        self.reconfigure()
+
+    def run(self):
+        while not self.has_stopped and not rospy.is_shutdown():
+            self.world.spinOnce()
+
+    def stop(self, msg):
+        self.has_stopped = msg.data
+        print("Stopped! Trying reconfigure...")
+        self.reconfigure()
+
+    def reconfigure(self):
+        try:
+            yaml = rospy.get_param('tracking/scenario')
+        except KeyError:
+            print("could not find parameter: tracking/scenario on server")
+            print("Waiting for reset message (/tracking/reset_all) ...")
+            self.has_stopped = True
+            return
+
+        try:
+            param,ns = rosparam.load_file(yaml)[0]
+        except rosparam.RosParamException:
+            print("Failed to load %s" %yaml)
+            print("Waiting for reset message (/tracking/reset_all) ...")
+            self.has_stopped = True
+            return
+        print("Loaded %s" %yaml)
+        try:
+            self.objects = [ Object(**p) for p in param['objects'] ]
+        except NameError as e:
+            print("Couldn't instantiate objects.")
+            print("Something seems wrong with the objects section of your yaml file:")
+            print("\t%s"%e)
+            print("Waiting for reset message (/tracking/reset_all) ...")
+            self.has_stopped = True
+            return
+        except TypeError as e:
+            print("Couldn't instantiate objects.")
+            print("Something seems wrong with the objects section of your yaml file:")
+            print("\t%s"%e)
+            print(Object.__doc__)
+            print("Waiting for reset message (/tracking/reset_all) ...")
+            self.has_stopped = True
+            return
+        except:
+            print(sys.exc_info())
+            raise
+            print("Object creation successful. (%s objects loaded)" % len(self.objects))
+
+        try:
+            self.world = World(**param['world'])
+        except NameError as e:
+            print("Couldn't instantiate simulation.")
+            print("Something seems wrong with the world section of your yaml file.")
+            print("\t%s"%e)
+            print("Waiting for reset message (/tracking/reset_all) ...")
+            self.has_stopped = True
+            return
+        except TypeError as e:
+            print("Couldn't instantiate simulation.")
+            print("Something seems wrong with the world section of your yaml file.")
+            print("\t%s"%e)
+            print(World.__doc__)
+            print("Waiting for reset message (/tracking/reset_all) ...")
+            self.has_stopped = True
+            return
+        except:
+            print(sys.exc_info())
+            raise
+
+        self.has_stopped = False
+        print("Simulator creation successful.")
+        print("Default output points [mlr_msgs::Point2dArray], topic is: tracking/lk2d/points")
+        print("Default output images [sensor_msgs::Image], topic is: camera/rgb/image_color")
+        self.world.set_objects(self.objects)
+        print("Running...")
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) != 2 :
-        print("Please specify exactly one simulation scenario config yaml file. Thank you.")
-        exit(0)
-
     rospy.init_node('simulation2d_node')
-    param,ns = rosparam.load_file(sys.argv[1])[0]
-    try:
-        objects = [ Object(**p) for p in param['objects'] ]
-    except NameError as e:
-        print("Couldn't instantiate objects.")
-        print("Something seems wrong with the objects section of your yaml file:")
-        print("\t%s"%e)
-        exit(0)
-    except TypeError as e:
-        print("Couldn't instantiate objects.")
-        print("Something seems wrong with the objects section of your yaml file:")
-        print("\t%s"%e)
-        print(Object.__doc__)
-        exit(0)
-    except:
-        print(sys.exc_info())
-        raise
-    print("Object creation successful. (%s objects loaded)" % len(objects))
+
+    if len(sys.argv) != 2:
+        if not rospy.has_param('tracking/scenario'):
+            print("Please specify exactly one simulation scenario config yaml file.")
+            print("You can provide one via command line argument or by setting a parameter")
+            print("on the rosparam server. (rosparam set /tracking/scenario /full/path/to.yaml)")
+    else:
+        rospy.set_param('/tracking/scenario', sys.argv[1])
+    sim = Simulator()
 
     try:
-        sim = Simulation(**param['world'])
-    except NameError as e:
-        print("Couldn't instantiate simulation.")
-        print("Something seems wrong with the world section of your yaml file.")
-        print("\t%s"%e)
-        exit(0)
-    except TypeError as e:
-        print("Couldn't instantiate simulation.")
-        print("Something seems wrong with the world section of your yaml file.")
-        print("\t%s"%e)
-        print(Simulation.__doc__)
-        exit(0)
-    except:
-        print(sys.exc_info())
-        raise
-
-    sim.set_objects(objects)
-    print("Simulator creation successful.")
-    print("Default output points [mlr_msgs::Point2dArray], topic is: tracking/lk2d/points")
-    print("Default output images [sensor_msgs::Image], topic is: camera/rgb/image_color")
-    try:
-        sim.run()
+        while not rospy.is_shutdown():
+            sim.run()
+            rospy.Rate(2).sleep() # waiting for reconfigure
     except rospy.ROSInterruptException:
         pass
     

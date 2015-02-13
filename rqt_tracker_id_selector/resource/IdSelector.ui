@@ -17,16 +17,33 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="load_button">
+      <widget class="QPushButton" name="startButton">
        <property name="text">
-        <string>Subscribe</string>
+        <string/>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLineEdit" name="topic_text">
+      <widget class="QPushButton" name="stopButton">
        <property name="text">
-        <string>/lk_kernel</string>
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comboBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="refreshButton">
+       <property name="text">
+        <string/>
        </property>
       </widget>
      </item>
@@ -51,6 +68,9 @@
      <property name="sortingEnabled">
       <bool>true</bool>
      </property>
+     <property name="columnCount">
+      <number>2</number>
+     </property>
      <attribute name="horizontalHeaderCascadingSectionResizes">
       <bool>true</bool>
      </attribute>
@@ -69,6 +89,8 @@
      <attribute name="verticalHeaderMinimumSectionSize">
       <number>14</number>
      </attribute>
+     <column/>
+     <column/>
     </widget>
    </item>
   </layout>

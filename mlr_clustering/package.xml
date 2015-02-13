@@ -52,6 +52,8 @@
   <build_depend>dynamic_reconfigure</build_depend>
   <run_depend>dynamic_reconfigure</run_depend>
 
+  <build_depend>std_msgs</build_depend>
+
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- You can specify that this package is a metapackage here: -->

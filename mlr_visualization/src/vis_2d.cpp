@@ -14,6 +14,7 @@
 #include <ros/ros.h>
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
+#include <std_msgs/Bool.h>
 #include <mlr_msgs/Point2dArray.h>
 #include <mlr_msgs/ObjectIds.h>
 #include <mlr_visualization/utils.h>
@@ -34,9 +35,20 @@ struct Vis2dNode
     sub_img_ = it_.subscribe(topic_img_, 10, &Vis2dNode::image_cb, this);
     sub_traj_ = nh_.subscribe(topic_traj_, 1, &Vis2dNode::trajectory_cb, this);
     sub_objects_ = nh_.subscribe(topic_obj_, 1, &Vis2dNode::object_cb, this);
+    sub_reset_ = nh_.subscribe("tracking/reset_all", 1, &Vis2dNode::reset, this);
 
     ROS_INFO("Default output image topic is: %s", topic_out_.c_str());
     pub_img_ = it_.advertise(topic_out_,1);
+  }
+
+  void reset(const std_msgs::Bool& msg = std_msgs::Bool())
+  {
+    if (msg.data)
+    {
+      std::queue<cv_bridge::CvImageConstPtr> empty;
+      std::swap(empty,img_queue);
+      colors.clear();
+    }
   }
 
   void image_cb(const sensor_msgs::ImageConstPtr& img_msg)
@@ -111,6 +123,7 @@ struct Vis2dNode
   image_transport::Publisher pub_img_;
   ros::Subscriber sub_traj_;
   ros::Subscriber sub_objects_;
+  ros::Subscriber sub_reset_;
 
   std::queue<cv_bridge::CvImageConstPtr> img_queue;
   std::unordered_map<int,Visualization::Utils::ColorRGB> colors;

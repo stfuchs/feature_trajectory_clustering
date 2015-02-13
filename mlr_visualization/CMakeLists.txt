@@ -8,6 +8,7 @@ find_package(catkin REQUIRED COMPONENTS
   ar_track_alvar
   cv_bridge
   mlr_msgs
+  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions

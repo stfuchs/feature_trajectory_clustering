@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   mlr_msgs
   mlr_common
+  std_msgs
   roscpp)
 find_package(Eigen REQUIRED)
 
