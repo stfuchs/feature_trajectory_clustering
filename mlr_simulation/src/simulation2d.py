@@ -103,6 +103,7 @@ class World:
         self.objects = objs
         map(lambda o,c : o.setColor(c), self.objects, color_palette[:len(objs)])
         self.msg.ids = range(np.sum(map(lambda o: len(o.points), objs)))
+        #np.random.shuffle(self.msg.ids)
         return self
 
     def spinOnce(self):

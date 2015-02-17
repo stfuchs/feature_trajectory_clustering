@@ -1,0 +1,26 @@
+#objects : # list of objects to draw, background noise is also an object
+#  -
+#    pos: [[x0,y0],[x1,y1]] # key positions of the trajectory (specify at least 2 here)
+#    dim: [dx,dy] # dimensions of the object, specifies the initial measurement distribution
+#                 # default: [.05,.05]
+#    n: n # number of measurement points, default: 8
+#    noise: sigma # tracker noise, applied in each frame, default: .001
+
+objects:
+  - # background
+    pos: [[.6,.5],[.6,.5]]
+    dim: [.3,.4]
+    n: 20
+    noise: .0001
+  -
+    pos: [[.2,.9],[.2,.1]]
+    dim: [.05,.05] #this is also the default value, we won't mention it anymore
+    n: 5
+    noise: .0001 #this is also the default value, we won't mention it anymore
+
+
+world:
+  duration: 10 # duration for the specified trajectories in seconds
+  resolution: [640,480] # image resolution the above dimensions are scaled to
+                        # default: [640,480]
+  #suppress_points: True

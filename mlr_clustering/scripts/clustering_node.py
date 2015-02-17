@@ -9,6 +9,7 @@ import cv2
 import numpy as np
 from sklearn.mixture import GMM
 from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from matplotlib import colors
@@ -33,6 +34,27 @@ def symmetric(arr, n):
     M = np.zeros([n,n],np.float32)
     M[np.triu_indices(n,1)] = arr
     return M+M.T+np.diag(np.ones(n,dtype=np.float32))
+
+def recursiveKMeans(K, l, idx, i=1):
+    km = KMeans(1).fit(K[np.ix_(idx,idx)])
+    score = km.score(K[np.ix_(idx,idx)])
+    inertia = km.inertia_/len(idx)
+    print("i: %s, score: %s, inertia: %s"%(i,score, inertia))
+    print(l)
+    print(l[idx])
+    if inertia < 1.:
+        print("")
+        return l[idx]
+    i_prev = l[idx][0]
+    l[idx] = l[idx] + KMeans(2).fit_predict(K[np.ix_(idx,idx)])*(i-i_prev)
+    print(l[idx])
+    idx1 = np.where(l==i_prev)[0]
+    idx2 = np.where(l==i)[0]
+    if len(idx1) > 1:
+        l[idx1] = recursiveKMeans(K, l, idx1, i*2)
+    if len(idx2) > 1:
+        l[idx2] = recursiveKMeans(K, l, idx2, i*2+1)
+    return l[idx]
 
 class ClusteringNode:
     def __init__(self):
@@ -109,8 +131,9 @@ class ClusteringNode:
         k = range(max(1,self.k_last-1), self.k_last+2)
         #gmm = [ GMM(n_components=ki, covariance_type='full').fit(Kp) for ki in k ]
         gmm = [ GMM(n_components=ki, covariance_type='diag').fit(Kp) for ki in k ]
+        #gmm = [ GMM(n_components=ki, covariance_type='spherical').fit(Kp) for ki in k ]
         bic = [ gmmi.bic(Kp) for gmmi in gmm ]
-
+        print("rKMeans:\n%s" % recursiveKMeans(K,np.zeros(n,np.int),range(n)))
         print("BIC: %s, %s" % (k,bic))
         idx = np.argmin(bic)
         self.k_last = k[idx]
@@ -122,7 +145,7 @@ class ClusteringNode:
             self.transition = np.ones([self.k,self.k])*(1.-self.gamma)/(self.k-1.)
             self.transition[np.diag_indices_from(self.transition)] = self.gamma
 
-        print("cluster: %s, reduction: %s,%s" % (k[idx],Kp.shape[0],Kp.shape[1]))
+        #print("cluster: %s, reduction: %s,%s" % (k[idx],Kp.shape[0],Kp.shape[1]))
 
         Z = np.ones([n,self.k])*.0001
         Z[:,:k[idx]] = gmm[idx].predict_proba(Kp)
@@ -133,7 +156,7 @@ class ClusteringNode:
         ids = kernel_state.ids #list(self.probs.keys())
         y = self.getLabels(ids)
 
-        print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
+        #print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
         self.publish_object_ids(ids,y)
         self.publish_kernel_image(Kp,ids, not pca_success)
         self.publish_probabilities(ids)

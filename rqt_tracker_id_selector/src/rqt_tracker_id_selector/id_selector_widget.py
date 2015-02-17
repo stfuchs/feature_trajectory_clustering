@@ -32,6 +32,7 @@ class IdSelectorWidget(QWidget):
         self.refreshButton.setIcon(QIcon.fromTheme('view-refresh'))
         wildcard = os.path.join(rospkg.RosPack().get_path('mlr_simulation'),'yaml','*.yaml')
         self.files = glob.glob(wildcard)
+        self.files.sort()
         self.fnames = map(os.path.basename, self.files)
         map(self.comboBox.addItem, self.fnames)
 
@@ -99,14 +100,14 @@ class IdSelectorWidget(QWidget):
 
     @Slot()
     def on_startButton_clicked(self):
-        self.ids = {}
-        self.select = []
-        self.id_table.clear()
-        self.id_table.setRowCount(0)
         rospy.set_param('/tracking/scenario', self.files[self.comboBox.currentIndex()])
         msg = Bool()
         msg.data = True
         self.pub_reset.publish(msg)
+        self.ids = {}
+        self.select = []
+        self.id_table.clear()
+        self.id_table.setRowCount(0)
 
     @Slot()
     def on_stopButton_clicked(self):
@@ -117,6 +118,11 @@ class IdSelectorWidget(QWidget):
         msg = Bool()
         msg.data = True
         self.pub_reset.publish(msg)
+        self.ids = {}
+        self.select = []
+        self.id_table.clear()
+        self.id_table.setRowCount(0)
+
 
     @Slot()
     def on_refreshButton_clicked(self):
@@ -125,6 +131,7 @@ class IdSelectorWidget(QWidget):
 
         wildcard = os.path.join(rospkg.RosPack().get_path('mlr_simulation'),'yaml','*.yaml')
         self.files = glob.glob(wildcard)
+        self.files.sort()
         self.fnames = map(os.path.basename, self.files)
         map(self.comboBox.addItem, self.fnames)        
 
