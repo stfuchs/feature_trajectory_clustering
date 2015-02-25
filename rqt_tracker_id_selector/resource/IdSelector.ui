@@ -66,11 +66,14 @@
       <bool>false</bool>
      </property>
      <property name="sortingEnabled">
-      <bool>true</bool>
+      <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>2</number>
+      <number>3</number>
      </property>
+     <attribute name="horizontalHeaderVisible">
+      <bool>true</bool>
+     </attribute>
      <attribute name="horizontalHeaderCascadingSectionResizes">
       <bool>true</bool>
      </attribute>
@@ -89,6 +92,7 @@
      <attribute name="verticalHeaderMinimumSectionSize">
       <number>14</number>
      </attribute>
+     <column/>
      <column/>
      <column/>
     </widget>

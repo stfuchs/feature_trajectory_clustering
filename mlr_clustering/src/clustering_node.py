@@ -3,7 +3,7 @@
 import rospy
 from mlr_msgs.msg import KernelState, ObjectIds
 from sensor_msgs.msg import Image
-from std_msgs.msg import Header, Bool
+from std_msgs.msg import Header, Bool, Int64MultiArray
 
 import cv2
 import numpy as np
@@ -16,7 +16,7 @@ from matplotlib import colors
 
 from cv_bridge import CvBridge
 from collections import defaultdict
-
+import itertools
 
 def max_pick(M):
     idx = [0]*M.shape[0]
@@ -35,26 +35,41 @@ def symmetric(arr, n):
     M[np.triu_indices(n,1)] = arr
     return M+M.T+np.diag(np.ones(n,dtype=np.float32))
 
-def recursiveKMeans(K, l, idx, i=1):
-    km = KMeans(1).fit(K[np.ix_(idx,idx)])
-    score = km.score(K[np.ix_(idx,idx)])
-    inertia = km.inertia_/len(idx)
-    print("i: %s, score: %s, inertia: %s"%(i,score, inertia))
-    print(l)
-    print(l[idx])
-    if inertia < 1.:
-        print("")
-        return l[idx]
-    i_prev = l[idx][0]
-    l[idx] = l[idx] + KMeans(2).fit_predict(K[np.ix_(idx,idx)])*(i-i_prev)
-    print(l[idx])
-    idx1 = np.where(l==i_prev)[0]
-    idx2 = np.where(l==i)[0]
-    if len(idx1) > 1:
-        l[idx1] = recursiveKMeans(K, l, idx1, i*2)
-    if len(idx2) > 1:
-        l[idx2] = recursiveKMeans(K, l, idx2, i*2+1)
-    return l[idx]
+class HierarchicalKMeans:
+    def __init__(self, term=1.):
+        self.term_ = term
+
+    def fit(self, K):
+        n = K.shape[0]
+        self.l_ = np.zeros(n,int)
+        self.lmax_ = itertools.count(1)
+        self.score_ = []
+        self.recursive(K, range(n))
+        self.k_ = self.lmax_.next()
+        self.proba_ = np.zeros([n,self.k_])
+        self.proba_[range(n),self.l_] = 1.
+        self.score_.sort()
+        self.score_ = np.array(self.score_)[:,1]
+        return self
+
+    def recursive(self, K, idx):
+        inertia = KMeans(1).fit(K[np.ix_(idx,idx)]).inertia_/len(idx)
+        if inertia < self.term_:
+            self.score_.append( (self.l_[idx[0]], inertia) )
+            return
+
+        lnew = -np.ones_like(self.l_)
+        lnew[idx] = KMeans(2).fit_predict(K[np.ix_(idx,idx)])
+        idx1 = np.where(lnew==0)[0]
+        idx2 = np.where(lnew==1)[0]
+        self.l_[idx2] = self.lmax_.next()
+
+        if len(idx1) > 1: self.recursive(K, idx1)
+        if len(idx2) > 1: self.recursive(K, idx2)
+
+    def is_good_fit(self, K, idx):
+        return KMeans(1).fit(K[np.ix_(idx,idx)]).inertia_/len(idx) < self.term_
+
 
 class ClusteringNode:
     def __init__(self):
@@ -62,6 +77,8 @@ class ClusteringNode:
                                          self.reset, queue_size=1)
         self.sub = rospy.Subscriber("tracking/kernel", KernelState, self.lk_callback,
                                     queue_size=1, buff_size=2**24)
+        self.sub_select = rospy.Subscriber("tracking/monitor/ids", Int64MultiArray,
+                                           self.cb_select, queue_size=1)
         self.pub_image = rospy.Publisher("tracking/kernel_matrix",Image,queue_size=1)
         self.pub_objs = rospy.Publisher("tracking/objects",ObjectIds,queue_size=1)
         self.pub_probs = rospy.Publisher("tracking/probabilities",Image,queue_size=1)
@@ -82,6 +99,10 @@ class ClusteringNode:
         self.k_last = 1
         self.transition = np.ones([1,1])
         self.last_header = Header()
+        self.select = []
+
+    def cb_select(self, msg):
+        self.select = msg.data
 
     def predict(self, ids):
         X = np.zeros([len(ids),self.k])
@@ -130,16 +151,20 @@ class ClusteringNode:
         start = rospy.Time.now()
         k = range(max(1,self.k_last-1), self.k_last+2)
         #gmm = [ GMM(n_components=ki, covariance_type='full').fit(Kp) for ki in k ]
-        gmm = [ GMM(n_components=ki, covariance_type='diag').fit(Kp) for ki in k ]
+        #gmm = [ GMM(n_components=ki, covariance_type='diag').fit(Kp) for ki in k ]
         #gmm = [ GMM(n_components=ki, covariance_type='spherical').fit(Kp) for ki in k ]
-        bic = [ gmmi.bic(Kp) for gmmi in gmm ]
-        print("rKMeans:\n%s" % recursiveKMeans(K,np.zeros(n,np.int),range(n)))
-        print("BIC: %s, %s" % (k,bic))
-        idx = np.argmin(bic)
-        self.k_last = k[idx]
+        #bic = [ gmmi.bic(Kp) for gmmi in gmm ]
+        #print("BIC: %s, %s" % (k,bic))
+        #idx = np.argmin(bic)
+        #self.k_last = k[idx]
 
-        if k[idx] > self.k:
-            self.k = k[idx]
+        hkm = HierarchicalKMeans(term=1.).fit(K)
+        #print("KMeans: %s" % hkm.score_)
+        self.k_last = hkm.k_
+        #print("rKMeans:\n%s" % recursiveKMeans(K,np.zeros(n,np.int),range(n)))
+
+        if self.k_last > self.k:
+            self.k = self.k_last
             if k > 2: self.gamma = .5
             else: self.gamma = .8
             self.transition = np.ones([self.k,self.k])*(1.-self.gamma)/(self.k-1.)
@@ -147,8 +172,9 @@ class ClusteringNode:
 
         #print("cluster: %s, reduction: %s,%s" % (k[idx],Kp.shape[0],Kp.shape[1]))
 
-        Z = np.ones([n,self.k])*.0001
-        Z[:,:k[idx]] = gmm[idx].predict_proba(Kp)
+        Z = np.ones([n,self.k])*.1
+        #Z[:,:self.k_last = gmm[idx].predict_proba(Kp)
+        Z[:,:self.k_last] += hkm.proba_
         Z = np.vstack(map(lambda zi: zi/np.sum(zi), Z))
 
         X = self.predict(kernel_state.ids)
@@ -156,7 +182,7 @@ class ClusteringNode:
         ids = kernel_state.ids #list(self.probs.keys())
         y = self.getLabels(ids)
 
-        #print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
+        print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
         self.publish_object_ids(ids,y)
         self.publish_kernel_image(Kp,ids, not pca_success)
         self.publish_probabilities(ids)
@@ -187,6 +213,7 @@ class ClusteringNode:
             Ksorted = K
         img = np.array(self.cmap.to_rgba(Ksorted)[:,:,:3]*255, dtype=np.uint8)
         img_scaled = cv2.resize(img,(640,640),interpolation=cv2.INTER_NEAREST)
+        self.highlight_selection(img_scaled, np.array(ids)[idx])
         self.pub_image.publish(self.bridge.cv2_to_imgmsg(img_scaled,'rgb8'))
 
     def publish_probabilities(self, ids):
@@ -197,7 +224,22 @@ class ClusteringNode:
         size = (256, 640)
         img = np.array(self.cmap.to_rgba(X)[:,:,:3]*255, dtype=np.uint8)
         img_scaled = cv2.resize(img,size,interpolation=cv2.INTER_NEAREST)
+        self.highlight_selection(img_scaled, np.sort(ids))
         self.pub_probs.publish(self.bridge.cv2_to_imgmsg(img_scaled,'rgb8'))
+
+    def highlight_selection(self, img, ids):
+        h,w,c = img.shape
+        pix_size = float(h)/float(len(ids))
+        for i in self.select:
+            try:
+                idx = np.where(ids==i)[0][0]
+                off = idx * pix_size
+                p1 = (0,int(off))
+                p2 = (w,int(off+pix_size))
+                cv2.rectangle(img, p1, p2, ( 46, 204, 113), 2)
+            except IndexError:
+                print("Selected id %s not in Kernel message" % i)
+
 
 if __name__ == '__main__':
     import sys
