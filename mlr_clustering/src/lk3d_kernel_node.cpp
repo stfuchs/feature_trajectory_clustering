@@ -28,6 +28,8 @@ struct LK3dKernelNode
 
     ROS_INFO("Default output topic is: %s", topic_out_.c_str());
     pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
+    nh.param<LK_Tracker::TimeT>("tracking/kernel/timespan", LK_Tracker::timespan, 5.);
+    ROS_INFO("Selected time window for kernel: %f", LK_Tracker::timespan);
   }
 
   void lkCallback(mlr_msgs::Point3dArray const& msg)
@@ -57,6 +59,7 @@ struct LK3dKernelNode
     ros::Time start = ros::Time::now();
     mlr_msgs::KernelState ks;
     ks.header = header;
+    kernel.collectGarbage<LK_Tracker>(header.stamp.toSec());
     kernel.computeKernelMatrixData(ks.data,ks.ids);
     std::cout<<"Kernel ids: "<<ks.ids.size()<<" data: "<<ks.data.size()<<std::endl;
     pub.publish(ks);

@@ -10,8 +10,8 @@ find_package(catkin REQUIRED COMPONENTS
   dynamic_reconfigure
   mlr_msgs
   mlr_common
-  std_msgs
-  roscpp)
+  roscpp
+)
 find_package(Eigen REQUIRED)
 
 generate_dynamic_reconfigure_options(cfg/lk_clustering_params.cfg)
@@ -89,7 +89,7 @@ generate_dynamic_reconfigure_options(cfg/lk_clustering_params.cfg)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES mlr_clustering
-   CATKIN_DEPENDS mlr_msgs
+#  CATKIN_DEPENDS mlr_msgs
 #  DEPENDS system_lib
 )
 
@@ -119,7 +119,8 @@ add_executable(lk2d_kernel_node src/lk2d_kernel_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(mlr_clustering_node mlr_clustering_generate_messages_cpp)
+add_dependencies(lk3d_kernel_node mlr_msgs_generate_messages_cpp)
+add_dependencies(lk2d_kernel_node mlr_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 #target_link_libraries(lk_clustering_node
@@ -184,6 +185,5 @@ target_link_libraries(lk2d_kernel_node
 
 
 set(CMAKE_CXX_FLAGS "-Wall -g -std=c++0x ${CMAKE_CXX_FLAGS}")
-# Use release build for significant better performance
 set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_BUILD_TYPE Debug)

@@ -5,10 +5,11 @@ project(mlr_tracking)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  ar_track_alvar
+  #ar_track_alvar
   cv_bridge
-  pcl_ros
+  image_transport
   mlr_msgs
+  pcl_ros
 )
 
 ## System dependencies are found with CMake's conventions
@@ -83,7 +84,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES tracker
-  CATKIN_DEPENDS ar_track_alvar pcl_ros
+#  CATKIN_DEPENDS pcl_ros# ar_track_alvar
 #  DEPENDS system_lib
 )
 
@@ -113,17 +114,12 @@ add_executable(lk2d_tracker src/lk2d_tracker.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(tracker_node tracker_generate_messages_cpp)
+add_dependencies(lk3d_tracker mlr_msgs_generate_messages_cpp)
+add_dependencies(lk2d_tracker mlr_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(lk3d_tracker
-  ${catkin_LIBRARIES}
-#   ${OpenCV_LIBRARIES}
-)
-
-target_link_libraries(lk2d_tracker
-  ${catkin_LIBRARIES}
-)
+target_link_libraries(lk3d_tracker ${catkin_LIBRARIES})
+target_link_libraries(lk2d_tracker ${catkin_LIBRARIES})
 
 #target_link_libraries(depth_lucas_kanade_tracker ${catkin_LIBRARIES})
 

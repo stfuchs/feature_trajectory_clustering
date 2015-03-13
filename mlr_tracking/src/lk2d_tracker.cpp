@@ -40,56 +40,64 @@ struct LK2dTrackerNode
     if (img1->header.stamp < img0->header.stamp)
     {
       ROS_INFO("Message timestamp older than previous: RESET");
-      features.clear();
+      tracks.clear();
       id_count = 0;
     }
 
     std::vector<cv::Point2f> f0; // old features
-    std::vector<cv::Point2f> f1; // new features
+    std::vector<cv::Point2f> f1f; // new features forward
+    std::vector<cv::Point2f> f1b; // new features backward
     std::vector<int> ids;
-    cv::TermCriteria termcrit(cv::TermCriteria::COUNT|cv::TermCriteria::EPS,20,0.03);
-
-    if (features.size() < 10)
-    {
-      cv::goodFeaturesToTrack(img1->image, f0, 100, 0.01, 10, cv::Mat(), 3, false, 0.04);
-      cv::cornerSubPix(img1->image, f0, cv::Size(10,10), cv::Size(-1,-1), termcrit);
-      ROS_INFO("Initialized new features: %zu",f0.size());
-      for (size_t i=0; i<f0.size(); ++i) ids.push_back(id_count++);
-    }
+    cv::TermCriteria termcrit(cv::TermCriteria::COUNT|cv::TermCriteria::EPS,10,0.03);
 
     typename std::unordered_map<int,cv::Point2f>::iterator it;
-    for (it=features.begin(); it!=features.end(); ++it)
+    for (it=tracks.begin(); it!=tracks.end(); ++it)
     {
       ids.push_back(it->first);
       f0.push_back(it->second);
     }
 
-    std::vector<unsigned char> s;
-    std::vector<float> err;
-    cv::calcOpticalFlowPyrLK(img0->image,img1->image,f0,f1,s,err,cv::Size(31,31),3,termcrit);
-
-    mlr_msgs::Point2dArray msg;
-    msg.header = img_msg->header;
-    msg.scale_x = 1./float(img_msg->width);
-    msg.scale_y = 1./float(img_msg->height);
-    for (size_t i=0; i<f1.size(); ++i)
+    if (!tracks.empty())
     {
-      if (s[i] != 0)
+      std::vector<unsigned char> s;
+      std::vector<float> err;
+      cv::calcOpticalFlowPyrLK(img0->image,img1->image,f0,f1f,s,err,cv::Size(31,31),3,termcrit);
+      cv::calcOpticalFlowPyrLK(img1->image,img0->image,f1f,f1b,s,err,cv::Size(31,31),3,termcrit);
+
+      mlr_msgs::Point2dArray msg;
+      msg.header = img_msg->header;
+      msg.scale_x = 1./float(img_msg->width);
+      msg.scale_y = 1./float(img_msg->height);
+      for (size_t i=0; i<f1f.size(); ++i)
       {
-        features[ids[i]] = f1[i];
-        msg.ids.push_back(ids[i]);
-        msg.x.push_back(f1[i].x);
-        msg.y.push_back(f1[i].y);
+        cv::Point2f dw = f1f[i] - f1b[i];
+        cv::Point2f wf = f1f[i] - f0[i];
+        cv::Point2f wb = f1b[i] - f1f[i];
+        if ( dw.x*dw.x+dw.y*dw.y < .5*(wf.x*wf.x + wf.y*wf.y + wb.x*wb.x + wb.y*wb.y)+.5 )
+        {
+          tracks[ids[i]] = f1f[i];
+          msg.ids.push_back(ids[i]);
+          msg.x.push_back(f1f[i].x);
+          msg.y.push_back(f1f[i].y);
+        }
+        else
+        {
+          tracks.erase(ids[i]);
+        }
       }
-      else
+      if (!msg.ids.empty())
       {
-        features.erase(ids[i]);
+        ROS_INFO("Published %zu tracks", msg.ids.size());
+        pub_.publish(msg);
       }
     }
-    if (!msg.ids.empty())
+
+    if (tracks.size() < 50)
     {
-      ROS_INFO("Published %zu features", msg.ids.size());
-      pub_.publish(msg);
+      cv::goodFeaturesToTrack(img1->image, f0, 300, 0.01, 10, cv::Mat(), 3, false, 0.04);
+      cv::cornerSubPix(img1->image, f0, cv::Size(10,10), cv::Size(-1,-1), termcrit);
+      ROS_INFO("Initialized new tracks: %zu",f0.size());
+      for (size_t i=0; i<f0.size(); ++i) ids.push_back(id_count++);
     }
 
     std::swap(img0,img1);
@@ -107,7 +115,7 @@ struct LK2dTrackerNode
   int id_count;
   cv_bridge::CvImagePtr img0; // old gray image
   cv_bridge::CvImagePtr img1; // new gray image
-  std::unordered_map<int,cv::Point2f> features;
+  std::unordered_map<int,cv::Point2f> tracks;
 };
 
 int main(int argc, char** argv)

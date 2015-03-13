@@ -53,9 +53,10 @@ class HierarchicalKMeans:
         return self
 
     def recursive(self, K, idx):
-        inertia = KMeans(1).fit(K[np.ix_(idx,idx)]).inertia_/len(idx)
-        if inertia < self.term_:
-            self.score_.append( (self.l_[idx[0]], inertia) )
+        var = K[np.ix_(idx,idx)].var()
+        #print("Inertia: %s, Variance: %s" % (inertia, var))
+        if var < .1:#self.term_:
+            self.score_.append( (self.l_[idx[0]], var) )
             return
 
         lnew = -np.ones_like(self.l_)

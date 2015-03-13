@@ -5,10 +5,10 @@ project(mlr_visualization)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  ar_track_alvar
+  #ar_track_alvar
   cv_bridge
+  image_transport
   mlr_msgs
-  std_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -83,7 +83,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES visualization
-  CATKIN_DEPENDS ar_track_alvar
+#  CATKIN_DEPENDS mlr_msgs
 #  DEPENDS system_lib
 )
 
@@ -111,16 +111,12 @@ add_executable(vis_2d src/vis_2d.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
-# add_dependencies(visualization_node visualization_generate_messages_cpp)
+add_dependencies(vis_3d mlr_msgs_generate_messages_cpp)
+add_dependencies(vis_2d mlr_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
-target_link_libraries(vis_3d
-   ${catkin_LIBRARIES}
-)
-
-target_link_libraries(vis_2d
-   ${catkin_LIBRARIES}
-)
+target_link_libraries(vis_3d ${catkin_LIBRARIES})
+target_link_libraries(vis_2d ${catkin_LIBRARIES})
 
 #############
 ## Install ##
@@ -170,3 +166,4 @@ target_link_libraries(vis_2d
 ## Add folders to be run by python nosetests
 # catkin_add_nosetests(test)
 set(CMAKE_CXX_FLAGS "-Wall -g -std=c++0x ${CMAKE_CXX_FLAGS}")
+set(CMAKE_BUILD_TYPE Release)
