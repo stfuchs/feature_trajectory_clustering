@@ -100,7 +100,7 @@ struct MatrixCalculator
       result.push_back( exp(-10000.*n_inv*(sum_sqr - n_inv*sum*sum)) );
     }
     else {
-      result.push_back( 0.01 );
+      result.push_back( .1 );
     }
   }
 };

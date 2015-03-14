@@ -83,12 +83,17 @@ struct LK3dTrackerNode
     if (!tracks.empty())
     {
       std::vector<float> err;
-      std::vector<unsigned char> s;
-      cv::calcOpticalFlowPyrLK(img0,img1,f0,f1f,s,err,cv::Size(31,31),3,termcrit);
-      cv::calcOpticalFlowPyrLK(img1,img0,f1f,f1b,s,err,cv::Size(31,31),3,termcrit);
+      std::vector<unsigned char> sf, sb;
+      cv::calcOpticalFlowPyrLK(img0,img1,f0,f1f,sf,err,cv::Size(31,31),3,termcrit);
+      cv::calcOpticalFlowPyrLK(img1,img0,f1f,f1b,sb,err,cv::Size(31,31),3,termcrit);
 
       for(size_t i=0; i<f1f.size(); ++i)
       {
+        if (!sf[i] || f1f[i].x >= 640 || f1f[i].x < 0 || f1f[i].y >= 480 || f1f[i].y < 0) {
+          tracks.erase(ids[i]);
+          continue;
+        }
+
         cv::Point2f dw = f1f[i] - f1b[i]; // flow difference
         cv::Point2f wf = f1f[i] - f0[i];  // forward flow
         cv::Point2f wb = f1b[i] - f1f[i]; // backward flow
@@ -116,20 +121,21 @@ struct LK3dTrackerNode
 
     if (tracks.size() < 50 || fr_count % 60 == 0)
     {
-      //std::vector<unsigned char> mask(640*box_scale*480*box_scale, 1);
-      cv::Mat mask(480*box_scale,640*box_scale,CV_8UC1, 1);
+      static const size_t box_size = 16;
+      typedef Eigen::Matrix<int, 480/box_size, 640/box_size> MaskMat;
+      MaskMat mask = MaskMat::Zero();
+
       std::vector<cv::Point2f> f;
       std::vector<int> ids_to_delete;
       cv::goodFeaturesToTrack(img1,f, 100, 0.01, 10, cv::Mat(), 3, false, 0.04);
       cv::cornerSubPix(img1, f, cv::Size(10,10), cv::Size(-1,-1), termcrit);
       for(it=tracks.begin(); it!=tracks.end(); ++it)
       {
-        size_t yi = round(it->second.y)*box_scale;
-        size_t xi = round(it->second.x)*box_scale;
-        if (mask.at<unsigned char>(yi, xi) == 0)
+        size_t yi = it->second.y/box_size;
+        size_t xi = it->second.x/box_size;
+        if (mask(yi, xi) != 0)
           ids_to_delete.push_back(it->first);
-        else
-          mask.at<unsigned char>(yi, xi) = 0;
+        mask(yi, xi) += 1;
       }
       
       for(auto id_it=ids_to_delete.begin(); id_it!=ids_to_delete.end(); ++id_it)
@@ -140,15 +146,17 @@ struct LK3dTrackerNode
       size_t inits=0;
       for(size_t i=0; i<f.size(); ++i)
       {
-        size_t yi = f[i].y*box_scale;
-        size_t xi = f[i].x*box_scale;
-        if (mask.at<unsigned char>(yi,xi) == 1)
+        if (f[i].x<0 || f[i].x>=640 || f[i].y<0 || f[i].y>=480)
+          continue; // why does this even happen????
+        size_t yi = f[i].y/box_size;
+        size_t xi = f[i].x/box_size;
+        if (mask(yi,xi) == 0)
         {
           Eigen::Vector3f p = subPixelInterpolation(f[i], pc_msg);
           if (p(2) == p(2))
           {
             tracks[id_count++] = { f[i].x, f[i].y, p };
-            mask.at<unsigned char>(yi,xi) = 0;
+            mask(yi,xi) += 1;
             ++inits;
           }
         }
@@ -159,11 +167,6 @@ struct LK3dTrackerNode
     cv::swap(img1, img0);
   }
   
-  inline size_t boxIndex(cv::Point2f const& p) {
-    // idx = x/s + y/s*width/s = (x + y*stride)*scale
-    return (round(p.x) + round(p.y)*box_stride)*box_scale;
-  }
-
   void publishTrajectoryUpdates(const PointCloudPtr& pc)
   {
     mlr_msgs::Point3dArray msg3d;
@@ -237,10 +240,9 @@ struct LK3dTrackerNode
   ros::Publisher pub2d_;
   ros::Publisher pub3d_;
 
-  int id_count;
-  int fr_count;
-  float box_scale = 1./16.;
-  float box_stride = 640./16.;
+  int id_count = 0;
+  int fr_count = 0;
+
   cv::Mat img0; // old gray image
   cv::Mat img1; // new gray image
   std::unordered_map<int,TrackState> tracks;
