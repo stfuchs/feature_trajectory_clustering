@@ -1,41 +1,32 @@
-#objects : # list of objects to draw, background noise is also an object
-#  -
-#    pos: [[x0,y0],[x1,y1]] # key positions of the trajectory (specify at least 2 here)
-#    dim: [dx,dy] # dimensions of the object, specifies the initial measurement distribution
-#                 # default: [.05,.05]
-#    n: n # number of measurement points, default: 8
-#    noise: sigma # tracker noise, applied in each frame, default: .001
 
-objects:
+entities:
   - # background 1
     pos: [[.5,.1],[.5,.1]]
-    dim: [.45,.05]
+    ext_high: [.45,.05]
     n: 10
     noise: .0001
   - # background 1
     pos: [[.9,.5],[.9,.5]]
-    dim: [.05,.45]
+    ext_high: [.05,.45]
     n: 10
     noise: .0001
   -
     pos: [[.1,.9],[.4,.9]]
-    dim: [.05,.05]
+    ext_high: [.05,.05]
     n: 5
     noise: .0001
   -
     pos: [[.1,.9],[.1,.4]]
-    dim: [.025,.025]
+    ext_high: [.025,.025]
     n: 1
     noise: .0001
   -
     pos: [[.1,.9],[.6,.4]]
-    dim: [.025,.015]
+    ext_high: [.025,.015]
     n: 1
     noise: .0001
 
 
 world:
   duration: 5 # duration for the specified trajectories in seconds
-  resolution: [640,480] # image resolution the above dimensions are scaled to
-                        # default: [640,480]
-  #suppress_points: True
+  resolution: [640,640]
