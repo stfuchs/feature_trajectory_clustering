@@ -1,21 +1,22 @@
-
 entities:
   - # background
-    pos: [[.5,.5],[.5,.5]]
-    ext_high: [.95,.95]
+    pos: [[.05,.05],[.05,.05]]
+    ext_high: [.9,.9]
     n: 20
     noise: .0005
   -
     pos: [[.3,.3],[.5,.5],[.5,.5],[.8,.3]]
     ext_high: [.1,.05]
+    mp_pos: "sin"
     n: 10
     noise: .002
   -
-    pos: [[.8,.1],[.8,.9]]
+    pos: [[.8,.1],[.8,.8]]
+    mp_pos: "sin"
     n: 5
 
 
 world:
-  duration: 10 # duration for the specified trajectories in seconds
-  #suppress_points: True
-  #rate: 1
+  duration: 10
+  resolution: [640,640]
+
