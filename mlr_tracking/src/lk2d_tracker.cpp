@@ -24,13 +24,14 @@ struct LK2dTrackerNode
 {
   LK2dTrackerNode() : it_(nh_), id_count(0), fr_count(0)
   {
-    itopic_ = "camera/rgb/image_color";
-    otopic_ = "tracking/lk2d/points";
+    itopic_ = "/camera/rgb/image_color";
+    otopic_ = "lk2d/points";
     ROS_INFO("Default input topic is: %s", itopic_.c_str());
     sub_img_ = it_.subscribe(itopic_, 1, &LK2dTrackerNode::callback, this);
 
     ROS_INFO("Default output topic is: %s", otopic_.c_str());
-    //img_pub_ = it_.advertise("lk_image",1);
+    nh_.param<int>("lk2d/init_rate", fr_rate, 15);
+    ROS_INFO("Selected point initialization rate at %ith frame",fr_rate);
     pub_ = nh_.advertise<mlr_msgs::Point2dArray>(otopic_,1);
   }
 
@@ -97,7 +98,7 @@ struct LK2dTrackerNode
       }
     }
 
-    if (tracks.size() < 50 || fr_count % 5 == 0)
+    if (tracks.size() < 50 || fr_count % fr_rate == 0)
     {
       static const size_t box_size = 16;
       typedef Eigen::Matrix<int, 480/box_size, 640/box_size> MaskMat;
@@ -149,6 +150,7 @@ struct LK2dTrackerNode
   image_transport::Subscriber sub_img_;
   //image_transport::Publisher img_pub_;
 
+  int fr_rate;
   int id_count = 0;
   int fr_count = 0;
 

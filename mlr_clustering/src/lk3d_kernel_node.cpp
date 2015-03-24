@@ -21,14 +21,14 @@ struct LK3dKernelNode
 {
   LK3dKernelNode()
   { 
-    topic_traj_ = "tracking/lk3d/points";
-    topic_out_ = "tracking/kernel";
+    topic_traj_ = "lk3d/points";
+    topic_out_ = "kernel";
     ROS_INFO("Default input Point3dArray topic is: %s", topic_traj_.c_str());
     sub = nh.subscribe(topic_traj_,1,&LK3dKernelNode::lkCallback,this);
 
     ROS_INFO("Default output topic is: %s", topic_out_.c_str());
     pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
-    nh.param<LK_Tracker::TimeT>("tracking/kernel/timespan", LK_Tracker::timespan, 5.);
+    nh.param<LK_Tracker::TimeT>("kernel/timespan", LK_Tracker::timespan, 5.);
     ROS_INFO("Selected time window for kernel: %f", LK_Tracker::timespan);
   }
 

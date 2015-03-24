@@ -95,9 +95,13 @@ struct MatrixCalculator
     if(sum_w>0)
     {
       double n_inv = 1./sum_w;
+      double mean = n_inv*sum;
+      double var = n_inv*(sum_sqr - mean*sum);
       //if(sum*sum != sum*sum) std::cout << "sum*sum is nan" << std::endl;
       //result.push_back( exp(-.5*(T1::scale+T2::scale)*(sum_sqr - sum*sum*n_inv)*n_inv) );
-      result.push_back( exp(-10000.*n_inv*(sum_sqr - n_inv*sum*sum)) );
+      //result.push_back( exp(-100000.*mean*var) );
+      result.push_back( exp(-10000.*var) );
+      //result.push_back(var);
     }
     else {
       result.push_back( .5 );

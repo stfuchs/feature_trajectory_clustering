@@ -39,8 +39,8 @@ class IdSelectorWidget(QWidget):
 
         self.sub_traj = rospy.Subscriber("tracking/lk2d/points", Point2dArray,
                                          self.cb_points, queue_size=1)
-        self.sub_kernel = rospy.Subscriber("tracking/kernel", KernelState,
-                                           self.cb_kernel, queue_size=1, buff_size=2**24)
+        #self.sub_kernel = rospy.Subscriber("tracking/kernel", KernelState,
+        #                                   self.cb_kernel, queue_size=1, buff_size=2**24)
         self.sub_obj = rospy.Subscriber("tracking/objects", ObjectIds,
                                         self.cb_obj, queue_size=1)
 

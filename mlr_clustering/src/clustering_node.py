@@ -74,19 +74,15 @@ class HierarchicalKMeans:
 
 class ClusteringNode:
     def __init__(self):
-        self.sub_reset = rospy.Subscriber("tracking/reset_all", Bool,
+        self.sub_reset = rospy.Subscriber("reset_all", Bool,
                                          self.reset, queue_size=1)
-        self.sub = rospy.Subscriber("tracking/kernel", KernelState, self.lk_callback,
+        self.sub = rospy.Subscriber("kernel", KernelState, self.lk_callback,
                                     queue_size=1, buff_size=2**24)
-        self.sub_select = rospy.Subscriber("tracking/monitor/ids", Int64MultiArray,
+        self.sub_select = rospy.Subscriber("monitor/ids", Int64MultiArray,
                                            self.cb_select, queue_size=1)
-        self.pub_image = rospy.Publisher("tracking/kernel_matrix",Image,queue_size=1)
-        self.pub_objs = rospy.Publisher("tracking/objects",ObjectIds,queue_size=1)
-        self.pub_probs = rospy.Publisher("tracking/probabilities",Image,queue_size=1)
-        print("Default input [mlr_msgs::KernelState], topic is: tracking/kernel")
-        print("Default output objects [mlr_msgs::ObjectIds], topic is: tracking/objects")
-        print("Default output kernel matrix [sensor_msgs::Image], topic is: tracking/kernel_matrix")
-        print("Default output probabilities [sensor_msgs::Image], topic is: tracking/probabilities")
+        self.pub_image = rospy.Publisher("kernel_matrix",Image,queue_size=1)
+        self.pub_objs = rospy.Publisher("objects",ObjectIds,queue_size=1)
+        self.pub_probs = rospy.Publisher("probabilities",Image,queue_size=1)
         self.bridge = CvBridge()
         self.reset(True)
         self.gamma = .4

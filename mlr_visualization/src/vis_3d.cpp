@@ -23,8 +23,8 @@ struct Vis3dNode
 {
   Vis3dNode() : nh_()
   {
-    topic_traj_ = "tracking/lk3d/points";
-    topic_obj_  = "tracking/objects";
+    topic_traj_ = "lk3d/points";
+    topic_obj_  = "objects";
     ROS_INFO("Default input Point2dArray topic is: %s", topic_traj_.c_str());
     ROS_INFO("Default input ObjectIds topic is: %s", topic_obj_.c_str());
     sub_traj_ = nh_.subscribe(topic_traj_, 100, &Vis3dNode::trajectory_cb,this);
@@ -51,9 +51,9 @@ struct Vis3dNode
     marker.pose.orientation.y = 0.0;
     marker.pose.orientation.z = 0.0;
     marker.pose.orientation.w = 1.0;
-    marker.scale.x = .005;
-    marker.scale.y = 0.1;
-    marker.scale.z = 0.1;
+    marker.scale.x = .002;
+    //marker.scale.y = 0.1;
+    //marker.scale.z = 0.1;
     marker.color.a = 1.;
     marker.color.r = 1.;
     marker.color.g = 1.;
@@ -97,7 +97,7 @@ struct Vis3dNode
     }
     last_header_ = update.header;
 
-    visualization_msgs::MarkerArray v_markers;
+    //visualization_msgs::MarkerArray v_markers;
 
     std::string frame_id = update.header.frame_id;
     for(size_t i=0; i<n; ++i)
@@ -116,29 +116,51 @@ struct Vis3dNode
       {
         traj_path_[id].points.push_back(point);
         traj_points_[id].points.push_back(point);
-        v_markers.markers.push_back(traj_path_[id]);
-        v_markers.markers.push_back(traj_points_[id]);
+        if(traj_path_[id].points.size() > 100)
+        {
+          traj_path_[id].points.erase(traj_path_[id].points.begin(),
+                                      traj_path_[id].points.begin()+20);
+        } 
+        //v_markers.markers.push_back(traj_path_[id]);
+        //v_markers.markers.push_back(traj_points_[id]);
       }
     }
-    pub_path_.publish(v_markers);
+    //pub_path_.publish(v_markers);
   }
 
   void object_cb(const mlr_msgs::ObjectIds& msg)
   {
-    typename std::map<int,visualization_msgs::Marker>::iterator it;
-    for(it=traj_path_.begin(); it!=traj_path_.end(); ++it)
+    std::vector<int> to_delete;
+    for(auto it=traj_path_.begin(); it!=traj_path_.end(); ++it)
     {
-      it->second.color.r = 1.;
-      it->second.color.g = 1.;
-      it->second.color.b = 1.;
+      if(it->second.action == visualization_msgs::Marker::DELETE)
+      {
+        to_delete.push_back(it->first);
+      }
+      else
+      {
+        it->second.action = visualization_msgs::Marker::DELETE;
+        it->second.color.r = 1.;
+        it->second.color.g = 1.;
+        it->second.color.b = 1.;
+      }
+    }
+    
+    for(auto it=to_delete.begin(); it!=to_delete.end(); ++it)
+    {
+      traj_path_.erase(*it);
+      traj_points_.erase(*it);
     }
 
     for(int i=0; i<int(msg.offsets.size())-1; ++i)
     {
       Visualization::Utils::ColorRGB c;
-      Visualization::Utils::generateColor(i,c);
-      //std::cout << "Label: "<<i<< " Color: "
-      //          << int(c.r) << " " << int(c.g) << " " << int(c.b) << std::endl;
+      int l = msg.labels[i];
+      if (l<Visualization::Utils::N)
+        c = Visualization::Utils::palette[l];
+      else
+        Visualization::Utils::generateColor(l,c);
+
       for(int j=msg.offsets[i]; j<msg.offsets[i+1]; ++j)
       {
         int id = msg.ids[j] >> 32;
@@ -147,9 +169,15 @@ struct Vis3dNode
           traj_path_[id].color.r = float(c.r)/255.;
           traj_path_[id].color.g = float(c.g)/255.;
           traj_path_[id].color.b = float(c.b)/255.;
+          traj_path_[id].action = visualization_msgs::Marker::ADD;
         }
       }
     }
+    
+    visualization_msgs::MarkerArray v_markers;
+    for(auto it=traj_path_.begin(); it!=traj_path_.end(); ++it)
+      v_markers.markers.push_back(it->second);
+    pub_path_.publish(v_markers);
   }
 
   std::string topic_traj_;

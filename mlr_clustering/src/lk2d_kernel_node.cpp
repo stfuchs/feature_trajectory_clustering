@@ -22,15 +22,15 @@ struct LK2dKernelNode
 {
   LK2dKernelNode()
   { 
-    topic_traj_ = "tracking/lk2d/points";
-    topic_out_ = "tracking/kernel";
+    topic_traj_ = "lk2d/points";
+    topic_out_ = "kernel";
     ROS_INFO("Default input Point2dArray topic is: %s", topic_traj_.c_str());
     sub = nh.subscribe(topic_traj_,1,&LK2dKernelNode::lkCallback,this);
-    sub_reset = nh.subscribe("tracking/reset_all",1,&LK2dKernelNode::reset,this);
+    sub_reset = nh.subscribe("reset_all",1,&LK2dKernelNode::reset,this);
 
     ROS_INFO("Default output topic is: %s", topic_out_.c_str());
     pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
-    nh.param<LK2d_Tracker::TimeT>("tracking/kernel/timespan", LK2d_Tracker::timespan, 10.);
+    nh.param<LK2d_Tracker::TimeT>("kernel/timespan", LK2d_Tracker::timespan, 10.);
     ROS_INFO("Selected time window for kernel: %f", LK2d_Tracker::timespan);
   }
 

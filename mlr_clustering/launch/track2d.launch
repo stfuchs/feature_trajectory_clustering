@@ -1,0 +1,13 @@
+<launch>
+  <group ns="tracking">
+    <!-- set the frame when to initialize new points -->
+    <param name="lk2d/init_rate" type="int" value="30"/>
+    <!-- set the timespan in seconds when to dump old meassurements -->
+    <param name="kernel/timespan" type="double" value="5.0"/>
+    
+    <node name="tracker" pkg="mlr_tracking" type="lk2d_tracker"/>
+    <node name="kernel" pkg="mlr_clustering" type="lk2d_kernel_node"/>
+    <node name="cluster" pkg="mlr_clustering" type="clustering_node.py"/>
+    <node name="vis" pkg="mlr_visualization" type="vis_2d"/>
+  </group>
+</launch>

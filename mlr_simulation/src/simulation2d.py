@@ -69,7 +69,6 @@ class Entity(object):
                               ext_high, np.array([ext_high[0],ext_low[1]]) ]).T
 
         self.size = self.bb[:,2] - self.bb[:,0]
-        print(self.size)
         self.points = np.random.rand(2,n)*self.size.reshape(2,1)+self.bb[:,0].reshape(2,1)
         self.ids = [ Newid.get() for i in range(n) ]
         self.Tx = len(pos)-1
@@ -151,8 +150,8 @@ class World(object):
     """
 
     def __init__(self, duration, rate=15, resolution=(640,480)):
-        self.pub_image = rospy.Publisher("camera/rgb/image_color",Image,queue_size=1)
-        self.pub_points = rospy.Publisher("tracking/lk2d/points",Point2dArray,queue_size=1)
+        self.pub_image = rospy.Publisher("/camera/rgb/image_color",Image,queue_size=1)
+        self.pub_points = rospy.Publisher("lk2d/points",Point2dArray,queue_size=1)
         self.br = CvBridge()
         self.duration = float(duration)
         self.end = rospy.Time.now().to_sec()+self.duration

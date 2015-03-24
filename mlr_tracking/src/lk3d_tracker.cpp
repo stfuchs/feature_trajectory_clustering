@@ -38,14 +38,17 @@ struct LK3dTrackerNode
   
   LK3dTrackerNode(): id_count(0), fr_count(0)
   {
-    itopic_ = "camera/depth_registered/points";
-    otopic_ = "tracking/lk3d/points";
+    itopic_ = "/camera/depth_registered/points";
+    otopic_ = "lk3d/points";
     ROS_INFO("Default input pointcloud topic is %s", itopic_.c_str());
     sub_ = nh_.subscribe(itopic_,1,&LK3dTrackerNode::callback,this);
 
     ROS_INFO("Default output topic is: %s", otopic_.c_str());
-    pub3d_ = nh_.advertise<mlr_msgs::Point3dArray>("tracking/lk3d/points",1);
-    pub2d_ = nh_.advertise<mlr_msgs::Point2dArray>("tracking/lk2d/points",1);
+    nh_.param<int>("lk3d/init_rate", fr_rate, 60);
+    ROS_INFO("Selected point initialization rate at %ith frame",fr_rate);
+
+    pub3d_ = nh_.advertise<mlr_msgs::Point3dArray>("lk3d/points",1);
+    pub2d_ = nh_.advertise<mlr_msgs::Point2dArray>("lk2d/points",1);
   }
 
   void callback(const PointCloudPtr& pc_msg)
@@ -119,7 +122,7 @@ struct LK3dTrackerNode
       publishTrajectoryUpdates(pc_msg);
     }
 
-    if (tracks.size() < 50 || fr_count % 60 == 0)
+    if (tracks.size() < 50 || fr_count % fr_rate == 0)
     {
       static const size_t box_size = 16;
       typedef Eigen::Matrix<int, 480/box_size, 640/box_size> MaskMat;
@@ -133,7 +136,7 @@ struct LK3dTrackerNode
       {
         size_t yi = it->second.y/box_size;
         size_t xi = it->second.x/box_size;
-        if (mask(yi, xi) != 0)
+        if (mask(yi, xi) > 3)
           ids_to_delete.push_back(it->first);
         mask(yi, xi) += 1;
       }
@@ -240,6 +243,7 @@ struct LK3dTrackerNode
   ros::Publisher pub2d_;
   ros::Publisher pub3d_;
 
+  int fr_rate;
   int id_count = 0;
   int fr_count = 0;
 

@@ -25,17 +25,17 @@ struct Vis2dNode
 {
   Vis2dNode() : nh_(), it_(nh_)
   {
-    topic_img_  = "camera/rgb/image_color";
-    topic_traj_ = "tracking/lk2d/points";
-    topic_obj_  = "tracking/objects";
-    topic_out_  = "tracking/lk2d/image";
+    topic_img_  = "/camera/rgb/image_color";
+    topic_traj_ = "lk2d/points";
+    topic_obj_  = "objects";
+    topic_out_  = "lk2d/image";
     ROS_INFO("Default input image topic is: %s", topic_img_.c_str());
     ROS_INFO("Default input Point2dArray topic is: %s", topic_traj_.c_str());
     ROS_INFO("Default input ObjectIds topic is: %s", topic_obj_.c_str());
-    sub_img_ = it_.subscribe(topic_img_, 10, &Vis2dNode::image_cb, this);
+    sub_img_ = it_.subscribe(topic_img_, 1, &Vis2dNode::image_cb, this);
     sub_traj_ = nh_.subscribe(topic_traj_, 1, &Vis2dNode::trajectory_cb, this);
     sub_objects_ = nh_.subscribe(topic_obj_, 1, &Vis2dNode::object_cb, this);
-    sub_reset_ = nh_.subscribe("tracking/reset_all", 1, &Vis2dNode::reset, this);
+    sub_reset_ = nh_.subscribe("reset_all", 1, &Vis2dNode::reset, this);
 
     ROS_INFO("Default output image topic is: %s", topic_out_.c_str());
     pub_img_ = it_.advertise(topic_out_,1);
@@ -104,6 +104,8 @@ struct Vis2dNode
       int l = msg.labels[i];
       if (l<Visualization::Utils::N)
         c = Visualization::Utils::palette[l];
+      else
+        Visualization::Utils::generateColor(l,c);
 
       for(int j=msg.offsets[i]; j<msg.offsets[i+1]; ++j)
       {

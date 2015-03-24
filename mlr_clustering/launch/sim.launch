@@ -1,0 +1,10 @@
+<launch>
+  <group ns="tracking">
+    <!-- set the timespan in seconds when to dump old meassurements -->
+    <param name="kernel/timespan" type="double" value="10.0"/>
+    <node name="sim" pkg="mlr_simulation" type="simulation2d.py"/>
+    <node name="kernel" pkg="mlr_clustering" type="lk2d_kernel_node"/>
+    <node name="cluster" pkg="mlr_clustering" type="clustering_node.py"/>
+    <node name="vis2d" pkg="mlr_visualization" type="vis_2d"/>
+  </group>
+</launch>
