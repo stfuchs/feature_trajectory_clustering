@@ -1,34 +1,34 @@
 entities:
-  - ##### background
+  - 
     pos: [[0,0],[0,0]]
     angle: [0,0]
     ext_low: [.01,.01]
     ext_high: [.99,.99]
-    n: 10
+    n: 20
     noise: .0005
-    birth: 0.5
-    death: 0.5
-  - ##### crazy robot
+    birth: 0.2
+    death: 0.2
+  - 
     pos: [[.8,.5],[.2,.5]]
     angle: [0,2*pi,0,2*pi]
     mp_pos: "sin"
     mp_angle: "sin"
     ext_low: [-0.08,-0.08]
     ext_high: [.08,.08]
-    n: 5
+    n: 10
     noise: .001
-    birth: 0.8
-    death: 0.8
-  - #### door
+    birth: 0.2
+    death: 0.2
+  - 
     pos: [[.6,.2],[.6,.2]]
     angle: [pi/2.,pi]
     mp_angle: "sin"
     ext_low: [0,0]
     ext_high: [.5,.03]
-    n: 5
+    n: 10
     noise: .001
-    birth: 0.8
-    death: 0.8
+    birth: 0.2
+    death: 0.2
     
 world:
   duration: 10

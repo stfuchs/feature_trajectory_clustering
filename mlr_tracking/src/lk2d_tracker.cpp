@@ -151,8 +151,8 @@ struct LK2dTrackerNode
   //image_transport::Publisher img_pub_;
 
   int fr_rate;
-  int id_count = 0;
-  int fr_count = 0;
+  int id_count;
+  int fr_count;
 
   cv_bridge::CvImagePtr img0; // old gray image
   cv_bridge::CvImagePtr img1; // new gray image

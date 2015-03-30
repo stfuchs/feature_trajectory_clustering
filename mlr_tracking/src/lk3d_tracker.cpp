@@ -244,8 +244,8 @@ struct LK3dTrackerNode
   ros::Publisher pub3d_;
 
   int fr_rate;
-  int id_count = 0;
-  int fr_count = 0;
+  int id_count;
+  int fr_count;
 
   cv::Mat img0; // old gray image
   cv::Mat img1; // new gray image

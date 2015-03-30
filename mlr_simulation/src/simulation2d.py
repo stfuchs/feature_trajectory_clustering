@@ -198,7 +198,7 @@ class World(object):
 
 class Simulator(object):
     def __init__(self):
-        self.sub = rospy.Subscriber("tracking/reset_all", Bool, 
+        self.sub = rospy.Subscriber("reset_all", Bool, 
                                     self.stop, queue_size=1)
         self.has_stopped = True
         self.reconfigure()
@@ -214,7 +214,7 @@ class Simulator(object):
 
     def reconfigure(self):
         try:
-            yaml = rospy.get_param('tracking/scenario')
+            yaml = rospy.get_param('/tracking/scenario')
         except KeyError:
             print("could not find parameter: tracking/scenario on server")
             print("Waiting for reset message (/tracking/reset_all) ...")
