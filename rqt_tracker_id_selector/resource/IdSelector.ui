@@ -17,16 +17,9 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QPushButton" name="startButton">
+      <widget class="QPushButton" name="showButton">
        <property name="text">
-        <string/>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="stopButton">
-       <property name="text">
-        <string/>
+        <string>Show Track</string>
        </property>
       </widget>
      </item>
@@ -41,9 +34,26 @@
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="refreshButton">
+      <widget class="QPushButton" name="clearButton">
        <property name="text">
-        <string/>
+        <string>Clear</string>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLineEdit" name="lineEdit"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="saveButton">
+       <property name="text">
+        <string>Save</string>
        </property>
       </widget>
      </item>
@@ -57,10 +67,10 @@
       </font>
      </property>
      <property name="editTriggers">
-      <set>QAbstractItemView::NoEditTriggers</set>
+      <set>QAbstractItemView::CurrentChanged|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
      </property>
      <property name="selectionBehavior">
-      <enum>QAbstractItemView::SelectRows</enum>
+      <enum>QAbstractItemView::SelectItems</enum>
      </property>
      <property name="showGrid">
       <bool>false</bool>
@@ -69,7 +79,7 @@
       <bool>false</bool>
      </property>
      <property name="columnCount">
-      <number>3</number>
+      <number>2</number>
      </property>
      <attribute name="horizontalHeaderVisible">
       <bool>true</bool>
@@ -78,7 +88,10 @@
       <bool>true</bool>
      </attribute>
      <attribute name="horizontalHeaderDefaultSectionSize">
-      <number>100</number>
+      <number>200</number>
+     </attribute>
+     <attribute name="horizontalHeaderMinimumSectionSize">
+      <number>25</number>
      </attribute>
      <attribute name="horizontalHeaderStretchLastSection">
       <bool>true</bool>
@@ -92,7 +105,6 @@
      <attribute name="verticalHeaderMinimumSectionSize">
       <number>14</number>
      </attribute>
-     <column/>
      <column/>
      <column/>
     </widget>
