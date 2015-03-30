@@ -69,13 +69,11 @@ struct MatrixCalculator
       if (outer.t[i] >= inner.t.front()) continue;
       if (outer.t[i] < inner.t.back()) break;
       DistanceT const d = find(que_outer[i],inner.id);
-      //if(outer.w[i]!=outer.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
       sum += outer.w[i]*sqrt(d);
-      sum_sqr += outer.w[i]*d;//*d;
+      sum_sqr += outer.w[i]*d;
       sum_w += outer.w[i];
     }
-    //if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
 
     auto& que_inner = find(distances,inner.id);
     for(unsigned int i=0; i<que_inner.size(); ++i) // iterate inner distances
@@ -83,24 +81,19 @@ struct MatrixCalculator
       if (inner.t[i] >= outer.t.front()) continue;
       if (inner.t[i] < outer.t.back()) break;
       DistanceT const d = find(que_inner[i],outer.id);
-      //if(inner.w[i]!=inner.w[i]) std::cout << "w is nan" << std::endl;
       ++n;
       sum += inner.w[i]*sqrt(d);
-      sum_sqr += inner.w[i]*d;//*d;
+      sum_sqr += inner.w[i]*d;
       sum_w += inner.w[i];
     }
-    //if(sum_sqr!=sum_sqr) std::cout << "sum_sqr is nan" << std::endl;
 
-    //if(sum_w*10.>n)
     if(sum_w>0)
     {
       double n_inv = 1./sum_w;
       double mean = n_inv*sum;
       double var = n_inv*(sum_sqr - mean*sum);
-      //if(sum*sum != sum*sum) std::cout << "sum*sum is nan" << std::endl;
-      //result.push_back( exp(-.5*(T1::scale+T2::scale)*(sum_sqr - sum*sum*n_inv)*n_inv) );
-      //result.push_back( exp(-100000.*mean*var) );
-      result.push_back( exp(-10000.*var) );
+      // what to do if T1::gamma and T2::gamma are different?
+      result.push_back( exp(-T1::gamma*var) );
       //result.push_back(var);
     }
     else {
@@ -178,7 +171,7 @@ struct Kernel
     T& f = set(data,id);
     f.x.push_front(x_new);
     f.t.push_front(t_new);
-    f.w.push_front(0);
+    f.w.push_front(1.);
     typename dist_types<T>::distance_que& d = 
       set(distances,id, typename dist_types<T>::distance_que());
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque

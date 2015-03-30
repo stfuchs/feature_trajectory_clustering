@@ -43,7 +43,7 @@ inline typename T::ValueT computeWeight(
 {
   //return 1.;
   typename T::StateT v = (x2-x1)/(t2-t1);
-  return 1.-exp(-100.*v.dot(v));
+  return 1.-exp(-T::lambda*v.dot(v)-T::eps);
 }
 
 

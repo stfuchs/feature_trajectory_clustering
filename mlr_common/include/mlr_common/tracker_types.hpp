@@ -26,13 +26,16 @@ struct LK_Tracker : Trajectory<PointTraits,LK_Tracker>
   static const int32_t type_id = 1;
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
-  static const float scale;
-  static typename Base::TimeT timespan;// = 10. ;
+  static typename Base::TimeT timespan;
+  static typename Base::ValueT lambda;
+  static typename Base::ValueT gamma;
+  static typename Base::ValueT eps;
 };
 
-const float LK_Tracker::scale = 100.;
 typename LK_Tracker::Base::TimeT LK_Tracker::timespan = 10.;
-
+typename LK_Tracker::Base::ValueT LK_Tracker::lambda = 100.;
+typename LK_Tracker::Base::ValueT LK_Tracker::gamma = 10000.;
+typename LK_Tracker::Base::ValueT LK_Tracker::eps = .0001;
 
 template<typename T>
 struct id_traits<T,typename std::enable_if<
@@ -55,13 +58,16 @@ struct LK2d_Tracker : Trajectory<Point2dTraits,LK2d_Tracker>
   static const int32_t type_id = 0;
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
-  static const float scale;
-  static typename Base::TimeT timespan;// = 10.;
+  static typename Base::TimeT timespan;
+  static typename Base::ValueT lambda;
+  static typename Base::ValueT gamma;
+  static typename Base::ValueT eps;
 };
 
-const float LK2d_Tracker::scale = 100.;
 typename LK2d_Tracker::Base::TimeT LK2d_Tracker::timespan = 10.;
-
+typename LK2d_Tracker::Base::ValueT LK2d_Tracker::lambda = 100.;
+typename LK2d_Tracker::Base::ValueT LK2d_Tracker::gamma = 10000.;
+typename LK2d_Tracker::Base::ValueT LK2d_Tracker::eps = .0001;
 
 template<typename T>
 struct id_traits<T,typename std::enable_if<
@@ -85,12 +91,16 @@ struct QR_Tracker : Trajectory<PoseTraits,QR_Tracker>
   static const int32_t type_id = 2;
   static const unsigned int n_min = 3;
   static const unsigned int n_max = 1000;
-  static const float scale;
-  static typename Base::TimeT timespan;// = 10.;
+  static typename Base::TimeT timespan;
+  static typename Base::ValueT lambda;
+  static typename Base::ValueT gamma;
+  static typename Base::ValueT eps;
 };
 
-const float QR_Tracker::scale = 100.;
 typename QR_Tracker::Base::TimeT QR_Tracker::timespan = 10.;
+typename QR_Tracker::Base::ValueT QR_Tracker::lambda = 100.;
+typename QR_Tracker::Base::ValueT QR_Tracker::gamma = 10000.;
+typename QR_Tracker::Base::ValueT QR_Tracker::eps = .0001;
 
 
 template<typename T>
