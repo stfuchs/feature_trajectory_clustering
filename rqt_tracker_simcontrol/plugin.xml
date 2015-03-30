@@ -1,0 +1,24 @@
+<library path="src">
+  <class name="Simcontrol"
+         type="rqt_tracker_simcontrol.simcontrol.Simcontrol"
+         base_class_type="rqt_gui_py::Plugin">
+    <description>
+      A Python GUI plugin to control the simulator.
+    </description>
+    <qtgui>
+      <group>
+        <label>Tracker</label>
+      </group>
+      <!-- optional grouping...
+      <group>
+        <label>Subgroup</label>
+      </group>
+      -->
+      <label>Simulator Control</label>
+      <icon type="theme">format-justify-fill</icon>
+      <statustip>
+        A Python GUI plugin to control the simulator.
+      </statustip>
+    </qtgui>
+  </class>
+</library>
