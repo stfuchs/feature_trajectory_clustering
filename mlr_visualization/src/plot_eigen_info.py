@@ -42,29 +42,33 @@ class PlotNode(object):
         idx0 = np.where(l==0)[0]
         idx1 = np.where(l==1)[0]
 
-        D = mat(np.diag(np.sum(array(X),axis=0)))
-        Xnorm = D.I*X
-        w,V = np.linalg.eig(Xnorm)
-        Vp1 = mat(V[:,np.argsort(abs(w))[-2:]]).T
-        Xp = array(Vp1*X)
-        
-        w,V = np.linalg.eig(D-X)
-        Vp2 = V[:,np.argsort(abs(w))[:2]].T
+        try:
+            D = mat(np.diag(np.sum(array(X),axis=0)))
+            Xnorm = D.I*X
+            w,V = np.linalg.eig(Xnorm)
+            widx = np.argsort(np.abs(w))[-2:]
+            Vp1 = mat(V[:,widx]).T
+            Xp = array(Vp1*Xnorm)
+            
+            w,V = np.linalg.eig(D-X)
+            Vp2 = V[:,np.argsort(abs(w))[:2]].T
 
-        w,V = np.linalg.eig(np.identity(n) - Xnorm)
-        Vp3 = V[:,np.argsort(abs(w))[:2]].T
+            w,V = np.linalg.eig(np.identity(n) - Xnorm)
+            Vp3 = V[:,np.argsort(abs(w))[:2]].T
+        except:
+            return
 
-        
+        plt.clf()
         fig, ax = plt.subplots(ncols=1,nrows=1,figsize=(12,8))
         ax.grid()
         ax.set_xlim([-1.,1.])
         ax.set_ylim([-1.,1.])
-        ax.plot(Xp[0,idx0], Xp[1,idx0], 'o')
-        ax.plot(Xp[0,idx1], Xp[1,idx1], 'o')
-        ax.plot(Vp2[0,idx0], Vp2[1,idx0], 'o')
-        ax.plot(Vp2[0,idx1], Vp2[1,idx1], 'o')
-        ax.plot(Vp3[0,idx0], Vp3[1,idx0], 'o')
-        ax.plot(Vp3[0,idx1], Vp3[1,idx1], 'o')
+        ax.plot(Xp[0,idx0], Xp[1,idx0], 'or')
+        ax.plot(Xp[0,idx1], Xp[1,idx1], 'ob')
+        #ax.plot(Vp2[0,idx0], Vp2[1,idx0], 'o')
+        #ax.plot(Vp2[0,idx1], Vp2[1,idx1], 'o')
+        ax.plot(-np.abs(Vp3[0,idx0]), Vp3[1,idx0], 'or')
+        ax.plot(-np.abs(Vp3[0,idx1]), Vp3[1,idx1], 'ob')
         img = fig2img(fig)
         plt.close('all')
         msg = self.bridge.cv2_to_imgmsg(img,'rgb8')
