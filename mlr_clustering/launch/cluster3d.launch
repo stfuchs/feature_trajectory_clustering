@@ -1,0 +1,15 @@
+<launch>
+  <group ns="tracking">
+    <!-- set the timespan in seconds when to dump old meassurements -->
+    <param name="kernel/timespan" type="double" value="10.0"/>
+    <!-- velocity to indicate full motion, every thing below gets less weight -->
+    <param name="kernel/vel09" type="double" value="0.15"/>
+    <!-- standard deviation of distances to switch between high and low affinity -->
+    <param name="kernel/sig05" type="double" value="0.005"/>
+    
+    <node name="kernel" pkg="mlr_clustering" type="lk3d_kernel_node" output="screen"/>
+    <node name="cluster" pkg="mlr_clustering" type="clustering_node.py" output="screen"/>
+    <node name="vis2d" pkg="mlr_visualization" type="vis_2d_tracks"/>
+    <node name="vis3d" pkg="mlr_visualization" type="vis_3d"/>
+  </group>
+</launch>

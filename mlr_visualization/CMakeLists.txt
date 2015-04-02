@@ -108,15 +108,18 @@ include_directories(
 ## Declare a cpp executable
 add_executable(vis_3d src/vis_3d.cpp)
 add_executable(vis_2d src/vis_2d.cpp)
+add_executable(vis_2d_tracks src/vis_2d_tracks.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 add_dependencies(vis_3d mlr_msgs_generate_messages_cpp)
 add_dependencies(vis_2d mlr_msgs_generate_messages_cpp)
+add_dependencies(vis_2d_tracks mlr_msgs_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(vis_3d ${catkin_LIBRARIES})
 target_link_libraries(vis_2d ${catkin_LIBRARIES})
+target_link_libraries(vis_2d_tracks ${catkin_LIBRARIES})
 
 #############
 ## Install ##

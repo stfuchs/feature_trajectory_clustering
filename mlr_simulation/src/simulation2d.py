@@ -2,13 +2,14 @@
 
 import rospy
 import rosparam
-from mlr_msgs.msg import Point2dArray
+from mlr_msgs.msg import Point2dArray, ObjectIds
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header, Bool
 import cv2
 import numpy as np
 from numpy import pi
 from cv_bridge import CvBridge
+from itertools import chain
 
 class ColorPalette(object):
     c = [(231,  76,  60),
@@ -138,6 +139,7 @@ class Entity(object):
         for i in range(bb.shape[1]):
             cv2.line(img,tuple(bb[:,i]),tuple(bb[:,(i+1)%bb.shape[1]]),self.c,3,cv2.CV_AA)
         self.tracks = self.transform_to_image(self.points,self.R,self.x,S)
+        return self
         
         
 
@@ -152,6 +154,7 @@ class World(object):
     def __init__(self, duration, rate=15, resolution=(640,480)):
         self.pub_image = rospy.Publisher("/camera/rgb/image_color",Image,queue_size=1)
         self.pub_points = rospy.Publisher("lk2d/points",Point2dArray,queue_size=1)
+        self.pub_objects = rospy.Publisher("objects_truth",ObjectIds,queue_size=1)
         self.br = CvBridge()
         self.duration = float(duration)
         self.end = rospy.Time.now().to_sec()+self.duration
@@ -170,6 +173,7 @@ class World(object):
         self.entities = ents
         map(lambda o,c : o.set_color(c), self.entities, ColorPalette.c[:len(ents)])
         map(lambda o: o.set_rate(self.inv_rate), self.entities)
+        self.ids = [ set(e.ids) for e in self.entities ]
         return self
 
     def spin_once(self):
@@ -186,10 +190,22 @@ class World(object):
             self.rate.sleep()
             return
 
-        map(lambda o: o.update(t).draw(img), self.entities)
+        for i, e in zip(self.ids,self.entities):
+            i.update(e.update(t).draw(img).ids)
+        oid = ObjectIds()
+
+        oid.header.stamp = rospy.Time.now()
+        oid.ids = list(map(lambda i: i<<32,chain(*map(list,self.ids))))
+        oid.offsets = [0]
+        for i in range(len(self.ids)):
+            oid.offsets.append(oid.offsets[i]+len(self.ids[i]))
+
+        oid.labels = range(len(self.ids))
+        self.pub_objects.publish(oid)
+        
         self.msg.header.stamp = rospy.Time.now()
         self.msg.x,self.msg.y = map(list,np.vstack([e.tracks.T for e in self.entities]).T)
-        self.msg.ids = list(np.hstack([e.ids for e in self.entities]))
+        self.msg.ids = list(chain(*[e.ids for e in self.entities]))
         img_msg = self.br.cv2_to_imgmsg(img,'rgb8')
         img_msg.header = self.msg.header
         self.pub_image.publish(img_msg)

@@ -28,8 +28,18 @@ struct LK3dKernelNode
 
     ROS_INFO("Default output topic is: %s", topic_out_.c_str());
     pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
-    nh.param<LK_Tracker::TimeT>("kernel/timespan", LK_Tracker::timespan, 5.);
+    nh.param<double>("kernel/timespan", LK_Tracker::timespan, 5.);
+    double vel09; // velocity to indicate motion
+    nh.param<double>("kernel/vel09", vel09, 0.15);
+    LK_Tracker::lambda = - log(0.1)/(vel09*vel09);
+
+    double sig05; // standard deviation of distance to indicate difference
+    nh.param<double>("kernel/sig05", sig05, 0.008);
+    LK_Tracker::gamma = - log(0.5)/(sig05*sig05);
+    
     ROS_INFO("Selected time window for kernel: %f", LK_Tracker::timespan);
+    ROS_INFO("Selected lambda for kernel: %f", LK_Tracker::lambda);
+    ROS_INFO("Selected gamma for kernel: %f", LK_Tracker::gamma);
   }
 
   void lkCallback(mlr_msgs::Point3dArray const& msg)

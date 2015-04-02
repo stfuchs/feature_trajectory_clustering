@@ -43,20 +43,22 @@ class HierarchicalKMeans:
         n = K.shape[0]
         self.l_ = np.zeros(n,int)
         self.lmax_ = itertools.count(1)
-        self.score_ = []
+        #self.score_ = []
         self.recursive(K, range(n))
         self.k_ = self.lmax_.next()
         self.proba_ = np.zeros([n,self.k_])
         self.proba_[range(n),self.l_] = 1.
-        self.score_.sort()
-        self.score_ = np.array(self.score_)[:,1]
+        #self.score_.sort()
+        #self.score_ = np.array(self.score_)[:,1]
         return self
 
     def recursive(self, K, idx):
         var = K[np.ix_(idx,idx)].var()
+        #aff_min = K[np.ix_(idx,idx)].min()
         #print("Inertia: %s, Variance: %s" % (inertia, var))
+        #if aff_min > .3:#self.term_:
         if var < .1:#self.term_:
-            self.score_.append( (self.l_[idx[0]], var) )
+            #self.score_.append( (self.l_[idx[0]], var) )
             return
 
         lnew = -np.ones_like(self.l_)

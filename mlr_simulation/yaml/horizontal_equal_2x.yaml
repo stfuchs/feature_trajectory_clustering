@@ -1,0 +1,25 @@
+
+entities:
+  - # background
+    pos: [[0,0],[0,0]]
+    ext_high: [.99,.99]
+    ext_low: [.01,.01]
+    n: 10
+    noise: .0005
+  -
+    pos: [[.1,.4],[.5,.4],[.9,.4],[.9,.4]]
+    ext_high: [.05,.05]
+    ext_low: [-0.05,-0.05]
+    n: 10
+    noise: .001
+  -
+    pos: [[.1,.6],[.1,.6],[.5,.6],[.9,.6]]
+    ext_high: [.05,.05]
+    ext_low: [-0.05,-0.05]
+    n: 10
+    noise: .001
+
+
+world:
+  duration: 10
+  resolution: [640,640]

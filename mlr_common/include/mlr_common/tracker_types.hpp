@@ -35,7 +35,7 @@ struct LK_Tracker : Trajectory<PointTraits,LK_Tracker>
 typename LK_Tracker::Base::TimeT LK_Tracker::timespan = 10.;
 typename LK_Tracker::Base::ValueT LK_Tracker::lambda = 100.;
 typename LK_Tracker::Base::ValueT LK_Tracker::gamma = 10000.;
-typename LK_Tracker::Base::ValueT LK_Tracker::eps = .0001;
+typename LK_Tracker::Base::ValueT LK_Tracker::eps = .000001;
 
 template<typename T>
 struct id_traits<T,typename std::enable_if<
@@ -67,7 +67,7 @@ struct LK2d_Tracker : Trajectory<Point2dTraits,LK2d_Tracker>
 typename LK2d_Tracker::Base::TimeT LK2d_Tracker::timespan = 10.;
 typename LK2d_Tracker::Base::ValueT LK2d_Tracker::lambda = 100.;
 typename LK2d_Tracker::Base::ValueT LK2d_Tracker::gamma = 10000.;
-typename LK2d_Tracker::Base::ValueT LK2d_Tracker::eps = .0001;
+typename LK2d_Tracker::Base::ValueT LK2d_Tracker::eps = .000001;
 
 template<typename T>
 struct id_traits<T,typename std::enable_if<
@@ -100,7 +100,7 @@ struct QR_Tracker : Trajectory<PoseTraits,QR_Tracker>
 typename QR_Tracker::Base::TimeT QR_Tracker::timespan = 10.;
 typename QR_Tracker::Base::ValueT QR_Tracker::lambda = 100.;
 typename QR_Tracker::Base::ValueT QR_Tracker::gamma = 10000.;
-typename QR_Tracker::Base::ValueT QR_Tracker::eps = .0001;
+typename QR_Tracker::Base::ValueT QR_Tracker::eps = .000001;
 
 
 template<typename T>

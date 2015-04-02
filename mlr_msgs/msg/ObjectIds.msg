@@ -4,6 +4,10 @@
 # to access all ids of the ith object, iterate as:
 # for(j=offsets[i]; j<offsets[i+1]; ++j)
 #   do_something( ids[j] )
+#
+# in python you might also want to consider list slicing by:
+# for l,s,e in zip(labels,offsets[:-1],offsets[1:]):
+#   do_something_with_object(l, ids[s:e])
 
 Header header
 int32[] offsets

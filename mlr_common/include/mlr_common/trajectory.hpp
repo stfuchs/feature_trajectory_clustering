@@ -52,27 +52,27 @@ inline typename T::ValueT computeWeight(
  **************************************************************************************/
 struct DefaultTraits
 {
-  typedef float ValueT;
-  typedef float StateT;
+  typedef double ValueT;
+  typedef double StateT;
   typedef double TimeT;
 };
 
 struct PointTraits : DefaultTraits
 {
-  typedef Eigen::Matrix<float,3,1> StateT;
+  typedef Eigen::Matrix<double,3,1> StateT;
 };
 
 
 struct Point2dTraits : DefaultTraits
 {
-  typedef Eigen::Matrix<float,2,1> StateT;
+  typedef Eigen::Matrix<double,2,1> StateT;
 };
 
 
 struct PoseTraits : DefaultTraits
 {
-  typedef Eigen::Matrix<float,3,1> PointT;
-  typedef Eigen::Quaternion<float> OrientationT;
+  typedef Eigen::Matrix<double,3,1> PointT;
+  typedef Eigen::Quaternion<double> OrientationT;
   
   struct StateT
   {

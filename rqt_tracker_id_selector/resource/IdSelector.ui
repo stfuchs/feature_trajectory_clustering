@@ -15,26 +15,71 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
-      <widget class="QPushButton" name="showButton">
+      <widget class="QLineEdit" name="lineEdit"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="saveButton">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Save ID - Label mappings to file</string>
+       </property>
+       <property name="statusTip">
+        <string>Save ID - Label mappings to file</string>
+       </property>
+       <property name="whatsThis">
+        <string>Save ID - Label mappings to file</string>
+       </property>
        <property name="text">
-        <string>Show Track</string>
+        <string>Save</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
+      <widget class="QPushButton" name="loadButton">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Load labels from yaml file</string>
+       </property>
+       <property name="statusTip">
+        <string>Load labels from yaml file</string>
+       </property>
+       <property name="whatsThis">
+        <string>Load labels from yaml file</string>
+       </property>
+       <property name="text">
+        <string>Load</string>
        </property>
       </widget>
      </item>
      <item>
       <widget class="QPushButton" name="clearButton">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Clear all Tracks and Table IDs</string>
+       </property>
+       <property name="statusTip">
+        <string>Clear all Tracks and Table IDs</string>
+       </property>
+       <property name="whatsThis">
+        <string>Clear all Tracks and Table IDs</string>
+       </property>
        <property name="text">
         <string>Clear</string>
        </property>
@@ -46,14 +91,91 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLineEdit" name="lineEdit"/>
+      <widget class="QPushButton" name="incrButton">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Increment label of selected IDs</string>
+       </property>
+       <property name="statusTip">
+        <string>Increment label of selected IDs</string>
+       </property>
+       <property name="whatsThis">
+        <string>Increment label of selected IDs</string>
+       </property>
+       <property name="text">
+        <string>+</string>
+       </property>
+       <property name="shortcut">
+        <string>+</string>
+       </property>
+      </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="saveButton">
+      <widget class="QPushButton" name="decrButton">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Decrement label of selected IDs</string>
+       </property>
+       <property name="statusTip">
+        <string>Decrement label of selected IDs</string>
+       </property>
+       <property name="whatsThis">
+        <string>Decrement label of selected IDs</string>
+       </property>
        <property name="text">
-        <string>Save</string>
+        <string>-</string>
+       </property>
+       <property name="shortcut">
+        <string>-</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkLabels">
+       <property name="text">
+        <string>Labels</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="checkLines">
+       <property name="text">
+        <string>Lines</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioAll">
+       <property name="text">
+        <string>All Points</string>
+       </property>
+       <property name="checked">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QRadioButton" name="radioLast">
+       <property name="text">
+        <string>Last Point</string>
        </property>
       </widget>
      </item>
@@ -67,7 +189,7 @@
       </font>
      </property>
      <property name="editTriggers">
-      <set>QAbstractItemView::CurrentChanged|QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed|QAbstractItemView::SelectedClicked</set>
+      <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
      </property>
      <property name="selectionBehavior">
       <enum>QAbstractItemView::SelectItems</enum>
@@ -76,7 +198,7 @@
       <bool>false</bool>
      </property>
      <property name="sortingEnabled">
-      <bool>false</bool>
+      <bool>true</bool>
      </property>
      <property name="columnCount">
       <number>2</number>
