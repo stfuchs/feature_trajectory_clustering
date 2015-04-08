@@ -1,0 +1,8 @@
+<launch>
+  <arg name="topic" default="/tracking/lk2d/image" />
+  <node name="extract" pkg="image_view" type="extract_images" respawn="false" output="screen">
+    <remap from="image" to="$(arg topic)" />
+    <param name="filename_format" value="$(env PWD)/frame%04i.png"/>
+    <param name="sec_per_frame" value="1.0"/>
+  </node>
+</launch>

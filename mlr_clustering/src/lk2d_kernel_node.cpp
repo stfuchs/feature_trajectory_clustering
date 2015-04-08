@@ -30,8 +30,19 @@ struct LK2dKernelNode
 
     ROS_INFO("Default output topic is: %s", topic_out_.c_str());
     pub = nh.advertise<mlr_msgs::KernelState>(topic_out_,1);
-    nh.param<LK2d_Tracker::TimeT>("kernel/timespan", LK2d_Tracker::timespan, 10.);
+
+    nh.param<double>("kernel/timespan", LK2d_Tracker::timespan, 10.);
+    double vel09; // velocity to indicate motion
+    nh.param<double>("kernel/vel09", vel09, 0.15);
+    LK2d_Tracker::lambda = - log(0.1)/(vel09*vel09);
+
+    double sig05; // standard deviation of distance to indicate difference
+    nh.param<double>("kernel/sig05", sig05, 0.008);
+    LK2d_Tracker::gamma = - log(0.5)/(sig05*sig05);
+    
     ROS_INFO("Selected time window for kernel: %f", LK2d_Tracker::timespan);
+    ROS_INFO("Selected lambda for kernel: %f", LK2d_Tracker::lambda);
+    ROS_INFO("Selected gamma for kernel: %f", LK2d_Tracker::gamma);
   }
 
   void reset(std_msgs::Bool const& msg = std_msgs::Bool())

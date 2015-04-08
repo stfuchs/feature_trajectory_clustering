@@ -1,0 +1,32 @@
+entities:
+  -
+    pos: [[.6,.9],[.6,.9]]
+    ext_high: [.05,.05]
+    n: 3
+    noise: .00001
+  -
+    pos: [[.6,.8],[.6,.8]]
+    ext_high: [.05,.05]
+    n: 3
+    noise: .00001
+  -
+    pos: [[.6,.7],[.6,.7]]
+    ext_high: [.05,.05]
+    n: 3
+    noise: .00001
+  -
+    pos: [[.1,.6],[.1,.6]]
+    ext_high: [.05,.05]
+    n: 3
+    noise: .00001
+  -
+    pos: [[.1,.9],[.1,.7]]
+    ext_high: [.05,.05]
+    mp_pos: "sin"
+    n: 3
+    noise: .00001
+
+
+world:
+  duration: 2 # duration for the specified trajectories in seconds
+  resolution: [640,640]
