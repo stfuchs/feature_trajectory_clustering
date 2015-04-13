@@ -10,6 +10,7 @@ import numpy as np
 from numpy import pi
 from cv_bridge import CvBridge
 from itertools import chain
+from random import sample as rnd_draw
 
 class ColorPalette(object):
     c = [(231,  76,  60),
@@ -61,10 +62,16 @@ class Entity(object):
     noise: tracker noise, applied in each frame
     birth: probability of spawning new trajectory (default=0)
     death: probability of deleting existing trajectory (default=0)
+    init_mode: string,
+        - "burst": at init_rate kill ceil(n*death) random trajectories
+          and create ceil(n*birth) new trajectories
+        - "seq": with a chance of p(death/init_rate) kill a single random trajectory
+          and create a new one with a chance of p(birth/init_rate) on each update
     """
     
     def __init__(self, pos, angle=[0,0], mp_pos="ramp", mp_angle="ramp",
-                 ext_low=[0,0], ext_high=[.1,.1], n=1, noise=0, birth=0, death=0):
+                 ext_low=[0,0], ext_high=[.1,.1], n=1,
+                 noise=0, birth=0, death=0, init_mode="burst", init_rate=15):
         
         self.bb = np.vstack([ ext_low, np.array([ext_low[0],ext_high[1]]),
                               ext_high, np.array([ext_high[0],ext_low[1]]) ]).T
@@ -91,6 +98,8 @@ class Entity(object):
         self.sigma = noise
         self.birth = birth
         self.death = death
+        self.init_mode = init_mode
+        self.init_rate = init_rate
         self.birth_count = 1
         self.death_count = 1
         self.update_count = 1
@@ -102,10 +111,12 @@ class Entity(object):
         self.r = r
         return self
 
-    def transform_to_image(self, X, R, t, s):
+    def transform_to_image(self, X, R, t, s, add_noise=False):
         res = np.array(R*X+t)
+        if add_noise:
+            res += np.random.randn(*self.points.shape)*self.sigma
         res[1,:] = 1.-res[1,:] # reflect y-axis for image domain
-        return (res*s).astype(int)
+        return (res*s)#.astype(int)
     
     def update(self, t):
         tx0 = int(t*self.Tx)
@@ -116,29 +127,34 @@ class Entity(object):
         self.a = self.A[ta0]+da
         self.R = np.mat([ [np.cos(self.a), -np.sin(self.a)],[np.sin(self.a),np.cos(self.a)] ])
         lp = list(self.points.T)
-        if len(lp)>1 and np.random.rand() <= self.death*self.r:
-            idx = int(np.random.rand()*len(lp))
-            del lp[idx]
-            del self.ids[idx]
-            #self.death_count += 1
-        if np.random.rand() <= self.birth*self.r:
-            self.ids.append(Newid().get())
-            lp.append(np.random.rand(2)*self.size+self.bb[:,0])
-            #self.birth_count += 1
-        #self.update_count += 1
-        #if (self.death_count%100)==0 or (self.birth_count%100)==0:
-        #    print("birth rate: %s\ndeath rate: %s"%
-        #          (float(self.birth_count)/self.update_count,
-        #           float(self.death_count)/self.update_count))
-        self.points = np.array(lp).T + np.random.randn(2,len(lp))*self.sigma
+        if self.init_mode is "seq":
+            if len(lp)>1 and np.random.rand() <= self.death/self.init_rate:
+                idx = int(np.random.rand()*len(lp))
+                del lp[idx]
+                del self.ids[idx]
+            if np.random.rand() <= self.birth/self.init_rate:
+                self.ids.append(Newid().get())
+                lp.append(np.random.rand(2)*self.size+self.bb[:,0])
+        elif self.init_mode is "burst" and (self.update_count%self.init_rate) is 0:
+            n = len(lp)
+            for i in range(int(np.ceil(self.death*n))):
+                idx = rnd_draw(range(len(lp)),1)[0]
+                del lp[idx]
+                del self.ids[idx]
+            for i in range(int(np.ceil(self.birth*n))):
+                self.ids.append(Newid().get())
+                lp.append(np.random.rand(2)*self.size+self.bb[:,0])
+            
+        self.update_count += 1
+        self.points = np.array(lp).T
         return self
         
     def draw(self, img):
         S = np.array( [[img.shape[1]],[img.shape[0]]] )
-        bb = self.transform_to_image(self.bb,self.R,self.x,S)
+        bb = self.transform_to_image(self.bb,self.R,self.x,S).astype(int)
         for i in range(bb.shape[1]):
             cv2.line(img,tuple(bb[:,i]),tuple(bb[:,(i+1)%bb.shape[1]]),self.c,3,cv2.CV_AA)
-        self.tracks = self.transform_to_image(self.points,self.R,self.x,S)
+        self.tracks = self.transform_to_image(self.points,self.R,self.x,S,True)
         return self
         
         
@@ -151,7 +167,7 @@ class World(object):
     resolution: [640,480] # image resolution the above dimensions are scaled to
     """
 
-    def __init__(self, duration, rate=15, resolution=(640,480)):
+    def __init__(self, duration, rate=15, resolution=(640,480), terminate=False):
         self.pub_image = rospy.Publisher("/camera/rgb/image_color",Image,queue_size=1)
         self.pub_points = rospy.Publisher("lk2d/points",Point2dArray,queue_size=1)
         self.pub_objects = rospy.Publisher("objects_truth",ObjectIds,queue_size=1)
@@ -168,6 +184,7 @@ class World(object):
         self.msg.header.frame_id = 'camera_rgb_optical_frame'
         self.msg.scale_x = 1./self.resolution[0]
         self.msg.scale_y = 1./self.resolution[1]
+        self.terminate = terminate
 
     def set_entities(self, ents):
         self.entities = ents
@@ -180,6 +197,7 @@ class World(object):
         img = np.ones([self.resolution[1],self.resolution[0],3],np.uint8)*255
         t = self.time()
         if t >= 1.:
+            if self.terminate: exit()
             self.end = rospy.Time.now().to_sec()+self.duration
             self.time = self.backward
             self.rate.sleep()

@@ -1,0 +1,21 @@
+entities:
+  -
+    pos: [[.05,.05],[.05,.05]]
+    ext_high: [.9,.9]
+    n: 40
+    noise: .0005
+    birth: .0
+    death: .0
+  -
+    pos: [[.2,.5],[.2,.5],[.2,.5],[.2,.5],[.2,.5],[.2,.5],[.8,.5]]
+    ext_high: [.05,.05]
+    ext_low: [-0.05,-0.05]
+    #mp_pos: "sin"
+    n: 10
+    noise: .0005
+    birth: .0
+    death: .0
+    
+world:
+  duration: 12
+  resolution: [640,640]

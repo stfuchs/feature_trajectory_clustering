@@ -1,26 +1,26 @@
 entities:
   - # background
-    pos: [[.01,.01],[.01,.01]]
-    ext_high: [.98,.98]
+    pos: [[.05,.05],[.05,.05]]
+    ext_high: [.9,.9]
     n: 20
     noise: .001
-    birth: .9
-    death: .9
+    birth: .0
+    death: .0
   -
-    pos: [[.1,.6],[.5,.6],[.9,.8]]
+    pos: [[.2,.6],[.5,.6],[.8,.8]]
     ext_high: [.1,.1]
-    n: 10
+    n: 5
     noise: .001
-    birth: .7
-    death: .7
+    birth: .0
+    death: .0
   -
-    pos: [[.1,.4],[.5,.4],[.9,.2]]
+    pos: [[.2,.4],[.5,.4],[.8,.2]]
     ext_high: [.1,.1]
-    n: 10
+    n: 5
     noise: .001
-    birth: .7
-    death: .7
+    birth: .0
+    death: .0
 
 world:
-  duration: 12
+  duration: 10
   resolution: [640,640]

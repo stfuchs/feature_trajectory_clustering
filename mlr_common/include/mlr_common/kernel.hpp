@@ -70,9 +70,12 @@ struct MatrixCalculator
       if (outer.t[i] < inner.t.back()) break;
       DistanceT const d = find(que_outer[i],inner.id);
       ++n;
-      sum += outer.w[i]*sqrt(d);
-      sum_sqr += outer.w[i]*d;
+      sum += sqrt(d);
+      sum_sqr += d;
+      //sum += outer.w[i]*sqrt(d);
+      //sum_sqr += outer.w[i]*d;
       sum_w += outer.w[i];
+      //std::cout << round(outer.w[i]) << " ";
     }
 
     auto& que_inner = find(distances,inner.id);
@@ -82,19 +85,23 @@ struct MatrixCalculator
       if (inner.t[i] < outer.t.back()) break;
       DistanceT const d = find(que_inner[i],outer.id);
       ++n;
-      sum += inner.w[i]*sqrt(d);
-      sum_sqr += inner.w[i]*d;
+      sum += sqrt(d);
+      sum_sqr += d;
+      //sum += inner.w[i]*sqrt(d);
+      //sum_sqr += inner.w[i]*d;
       sum_w += inner.w[i];
+      //std::cout << round(inner.w[i]) << " ";
     }
+    //std::cout << std::endl;
 
     if(sum_w>0)
     {
-      double n_inv = 1./sum_w;
+      double n_inv = 1./n;//sum_w;
       double mean = n_inv*sum;
       double var = n_inv*(sum_sqr - mean*sum);
       // what to do if T1::gamma and T2::gamma are different?
       result.push_back( exp(-T1::gamma*var) );
-      //result.push_back(var);
+      //result.push_back(sqrt(var));
     }
     else {
       result.push_back( .5 );

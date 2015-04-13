@@ -1,0 +1,30 @@
+<launch>
+  <arg name="out"/>
+  <arg name="sig" default="0.01"/>
+  <arg name="vel" default="0.15"/>
+  <arg name="span" default="10.0"/>
+  
+  <group ns="tracking">
+    <param name="kernel/timespan" type="double" value="$(arg span)"/>
+    <param name="kernel/vel09" type="double" value="$(arg vel)"/>
+    <param name="kernel/sig05" type="double" value="$(arg sig)"/>
+    <param name="scenario" type="string" value="$(arg out)/config.yaml"/>
+
+    <node name="sim" pkg="mlr_simulation" type="simulation2d.py" output="screen"/>
+    <node name="kernel" pkg="mlr_clustering" type="lk2d_kernel_node" output="screen"/>
+    <node name="cluster" pkg="mlr_clustering" type="clustering_node.py" output="screen"/>
+    <node name="vis2d" pkg="mlr_visualization" type="vis_2d_tracks"/>
+  </group>
+
+  <node name="extract" pkg="image_view" type="extract_images" respawn="false" output="screen">
+    <remap from="image" to="/tracking/lk2d/image"/>
+    <param name="filename_format" value="$(arg out)frame%04i.png"/>
+    <param name="sec_per_frame" value="0.5"/>
+  </node>
+  <node name="eval" pkg="mlr_visualization" type="plot_evaluation.py"
+        args="--out $(arg out)results.npy" respawn="false" output="screen">
+  </node>
+  <node name="dump_kernel" pkg="python_doodles" type="dump_kernel.py"
+        args="0.5 $(arg out)" respawn="false" output="screen">
+  </node>
+</launch>

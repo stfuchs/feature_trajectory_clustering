@@ -5,7 +5,7 @@
     <!-- velocity to indicate full motion, every thing below gets less weight -->
     <param name="kernel/vel09" type="double" value="0.15"/>
     <!-- standard deviation of distances to switch between high and low affinity -->
-    <param name="kernel/sig05" type="double" value="0.005"/>
+    <param name="kernel/sig05" type="double" value="0.01"/>
     
     <node name="kernel" pkg="mlr_clustering" type="lk3d_kernel_node" output="screen"/>
     <node name="cluster" pkg="mlr_clustering" type="clustering_node.py" output="screen"/>

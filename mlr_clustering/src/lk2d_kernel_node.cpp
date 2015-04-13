@@ -34,7 +34,7 @@ struct LK2dKernelNode
     nh.param<double>("kernel/timespan", LK2d_Tracker::timespan, 10.);
     double vel09; // velocity to indicate motion
     nh.param<double>("kernel/vel09", vel09, 0.15);
-    LK2d_Tracker::lambda = - log(0.1)/(vel09*vel09);
+    LK2d_Tracker::lambda = - log(0.5)/(vel09*vel09);
 
     double sig05; // standard deviation of distance to indicate difference
     nh.param<double>("kernel/sig05", sig05, 0.008);

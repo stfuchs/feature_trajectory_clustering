@@ -53,13 +53,17 @@ class HierarchicalKMeans:
         return self
 
     def recursive(self, K, idx):
-        var = K[np.ix_(idx,idx)].var()
+        aff = K[np.ix_(idx,idx)].flatten()
+        low = aff[aff<.4]
+        if len(low) == 0: return
+        #if len(low) < 0.05*len(aff) and np.mean(low)>0.25: return
+        #var = K[np.ix_(idx,idx)].var()
         #aff_min = K[np.ix_(idx,idx)].min()
         #print("Inertia: %s, Variance: %s" % (inertia, var))
-        #if aff_min > .3:#self.term_:
-        if var < .1:#self.term_:
+        #if aff_min > .3 and var < .1:#self.term_:
+        #if var < .1:#self.term_:
             #self.score_.append( (self.l_[idx[0]], var) )
-            return
+            #return
 
         lnew = -np.ones_like(self.l_)
         lnew[idx] = KMeans(2).fit_predict(K[np.ix_(idx,idx)])
@@ -164,8 +168,9 @@ class ClusteringNode:
 
         if self.k_last > self.k:
             self.k = self.k_last
-            if k > 2: self.gamma = .5
-            else: self.gamma = .8
+            #if k > 2: self.gamma = .5
+            #else: self.gamma = .8
+            self.gamma = .99
             self.transition = np.ones([self.k,self.k])*(1.-self.gamma)/(self.k-1.)
             self.transition[np.diag_indices_from(self.transition)] = self.gamma
 
@@ -183,7 +188,7 @@ class ClusteringNode:
 
         print("Clustering took %s sec" % (rospy.Time.now() - start).to_sec())
         self.publish_object_ids(ids,y)
-        self.publish_kernel_image(Kp,ids, not pca_success)
+        self.publish_kernel_image(Kp,ids,y,True)
         self.publish_probabilities(ids)
 
     def publish_object_ids(self, ids, y):
@@ -201,11 +206,12 @@ class ClusteringNode:
         msg.offsets.append(len(y))
         self.pub_objs.publish(msg)
 
-    def publish_kernel_image(self, K, ids, sort=True):
+    def publish_kernel_image(self, K, ids, l, sort=True):
         cmap_kernel = cm.ScalarMappable(norm=colors.Normalize(vmin=0,vmax=1.),
                                         cmap=plt.get_cmap("RdBu"))
-        idx = np.argsort(np.array(ids))
         if sort:
+            #idx = np.lexsort((ids,l))
+            idx = np.argsort(np.array(ids))
             Ksorted = K[idx,:]
             Ksorted = Ksorted[:,idx]
         else:

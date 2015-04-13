@@ -11,11 +11,12 @@ def symmetric(arr, n):
 
 
 class dumper(object):
-    def __init__(self,interval):
+    def __init__(self,interval,out):
         self.inter = interval
         self.last = rospy.Time.now()
         self.sub = rospy.Subscriber("/tracking/kernel",KernelState,self.listen)
         self.count = 0
+        self.out = out
 
     def listen(self, kernel):
         if (rospy.Time.now() - self.last).to_sec() >= self.inter:
@@ -27,7 +28,7 @@ class dumper(object):
             fname = "kernel%05d.npy"%self.count
             self.count += 1
             #fname = "kernel_%s.npy"%rospy.Time.now().to_nsec()
-            np.save(fname, K)
+            np.save(self.out+fname, K)
             print("Saved to %s"%fname)
 
 if __name__ == '__main__':
@@ -36,5 +37,9 @@ if __name__ == '__main__':
     inter = 0.5
     if len(sys.argv) > 1:
         inter = float(sys.argv[1])
-    node = dumper(inter)
+    if len(sys.argv) > 2:
+        oname = sys.argv[2]
+    else:
+        oname = ""
+    node = dumper(inter,oname)
     rospy.spin()

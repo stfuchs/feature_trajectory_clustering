@@ -33,5 +33,5 @@ entities:
 
 
 world:
-  duration: 10
+  duration: 14
   resolution: [640,640]
