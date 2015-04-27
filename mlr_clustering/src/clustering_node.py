@@ -30,10 +30,49 @@ def max_pick(M):
 def remap(X, Z):
     return max_pick( np.sum(map(lambda x,z : np.mat(x).T*np.mat(z), X, Z),axis=0) )
 
-def symmetric(arr, n):
+def symmetric(arr, n, diag=1.):
     M = np.zeros([n,n],np.float32)
     M[np.triu_indices(n,1)] = arr
-    return M+M.T+np.diag(np.ones(n,dtype=np.float32))
+    return M+M.T+np.diag(np.ones(n,dtype=np.float32)*diag)
+
+class DivisiveKMeans:
+    def __init__(self, W, v=0.05):
+        self.W = W
+        self.beta = -np.log(0.5)/(v**2)
+
+    def fit(self, K):
+        n = K.shape[0]
+        self.l_ = np.zeros(n,int)
+        self.lmax_ = itertools.count(1)
+        self.recursive(K, range(n))
+        self.k_ = self.lmax_.next()
+        self.proba_ = np.zeros([n,self.k_])
+        self.proba_[range(n),self.l_] = 1.
+        return self
+
+    def recursive(self, K, idx):
+        A = K[np.ix_(idx,idx)].copy() # get submatrix for all idx
+
+        L = np.diag(np.sum(A,axis=0)) - A # graph laplacian
+        e,E = np.linalg.eig(L)
+        v2 = (E[:,np.argsort(e)])[:,1] # second eigenvector
+
+        if A.min() > .4:
+            return
+
+        W = self.W[np.ix_(idx,idx)].copy()
+        D = np.diag(1./np.sum(W,axis=0))
+        V = np.exp(-self.beta*v2*v2)
+        v = V*(D.dot(W).dot(v2)) + (1.-V)*v2
+
+        lnew = -np.ones_like(self.l_)
+        lnew[idx] = (v>0).astype(int)
+        idx1 = np.where(lnew==0)[0]
+        idx2 = np.where(lnew==1)[0]
+        self.l_[idx2] = self.lmax_.next()
+
+        if len(idx1) > 1: self.recursive(K, idx1)
+        if len(idx2) > 1: self.recursive(K, idx2)
 
 class HierarchicalKMeans:
     def __init__(self, term=1.):
@@ -146,6 +185,9 @@ class ClusteringNode:
         start = rospy.Time.now()
         n = len(kernel_state.ids)
         K = symmetric(kernel_state.data,n)
+        W = symmetric(kernel_state.distances,n,diag=0)
+        alpha = -np.log(0.5)/(1.**2)
+        W = np.exp(-alpha*W)
         pca_success = False
         Kp = K
         #pca_success, Kp = self.PCA(K)
@@ -162,6 +204,7 @@ class ClusteringNode:
         #self.k_last = k[idx]
 
         hkm = HierarchicalKMeans(term=1.).fit(K)
+        #hkm = DivisiveKMeans(W).fit(K)
         #print("KMeans: %s" % hkm.score_)
         self.k_last = hkm.k_
         #print("rKMeans:\n%s" % recursiveKMeans(K,np.zeros(n,np.int),range(n)))
@@ -176,7 +219,7 @@ class ClusteringNode:
 
         #print("cluster: %s, reduction: %s,%s" % (k[idx],Kp.shape[0],Kp.shape[1]))
 
-        Z = np.ones([n,self.k])*.1
+        Z = np.ones([n,self.k])*.0001
         #Z[:,:self.k_last = gmm[idx].predict_proba(Kp)
         Z[:,:self.k_last] += hkm.proba_
         Z = np.vstack(map(lambda zi: zi/np.sum(zi), Z))

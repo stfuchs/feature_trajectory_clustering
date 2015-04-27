@@ -4,11 +4,11 @@ entities:
     angle: [0,0]
     ext_low: [.01,.01]
     ext_high: [.99,.99]
-    n: 20
-    noise: .005
-    birth: 0.0
-    death: 0.0
-    init_rate: 60
+    n: 30
+    noise: .002
+    birth: 0.3
+    death: 0.3
+    init_rate: 40
   - 
     pos: [[.8,.5],[.2,.5]]
     angle: [0,2*pi,0,2*pi]
@@ -17,10 +17,10 @@ entities:
     ext_low: [-0.08,-0.08]
     ext_high: [.08,.08]
     n: 10
-    noise: .005
-    birth: 0.0
-    death: 0.0
-    init_rate: 60
+    noise: .002
+    birth: 0.3
+    death: 0.3
+    init_rate: 40
   - 
     pos: [[.6,.2],[.6,.2]]
     angle: [pi/2.,pi]
@@ -28,12 +28,12 @@ entities:
     ext_low: [.1,0]
     ext_high: [.5,.03]
     n: 10
-    noise: .001
-    birth: 0.0
-    death: 0.0
-    init_rate: 60
+    noise: .002
+    birth: 0.3
+    death: 0.3
+    init_rate: 40
     
 world:
   duration: 10
-  terminate: False
+  terminate: True
   resolution: [640,640]

@@ -53,6 +53,7 @@ add_message_files(
     Point2dArray.msg
     Point3dArray.msg
     Pose3dArray.msg
+    SimControl.msg
 )
 
 ## Generate services in the 'srv' folder

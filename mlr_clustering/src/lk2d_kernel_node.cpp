@@ -82,7 +82,7 @@ struct LK2dKernelNode
     mlr_msgs::KernelState ks;
     ks.header = header;
     kernel.collectGarbage<LK2d_Tracker>(header.stamp.toSec());
-    kernel.computeKernelMatrixData(ks.data,ks.ids);
+    kernel.computeKernelMatrixData(ks.ids,ks.data,ks.distances);
     std::cout<<"Kernel ids: "<<ks.ids.size()<<" data: "<<ks.data.size()<<std::endl;
     pub.publish(ks);
     ROS_INFO("LK Kernel matrix took %f", (ros::Time::now() - start).toSec());

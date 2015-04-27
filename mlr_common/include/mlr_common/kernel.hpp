@@ -53,7 +53,7 @@ struct MatrixCalculator
 {
   template<typename T1, typename T2, typename D>
   void operator() (T1 const& outer, T2 const& inner, D const& distances,
-                   std::vector<float>& result)
+                   std::vector<float>& result, std::vector<float>& dist)
   {
     typedef typename trajectory_type_promotion<typename T1::type, typename T2::type>::
       res_distance_type DistanceT;
@@ -96,16 +96,19 @@ struct MatrixCalculator
 
     if(sum_w>0)
     {
-      double n_inv = 1./n;//sum_w;
-      double mean = n_inv*sum;
-      double var = n_inv*(sum_sqr - mean*sum);
+      DistanceT n_inv = 1./n;//sum_w;
+      DistanceT mean = n_inv*sum;
+      DistanceT var = n_inv*(sum_sqr - mean*sum);
       // what to do if T1::gamma and T2::gamma are different?
       result.push_back( exp(-T1::gamma*var) );
       //result.push_back(sqrt(var));
     }
     else {
-      result.push_back( .5 );
+      result.push_back( 1. );
     }
+    DistanceT d0 = trajectory_policy<typename T1::type,typename T2::type>::
+      distance(outer.x[0], inner.x[0]);
+    dist.push_back( d0 );
   }
 };
 
@@ -169,6 +172,13 @@ struct Kernel
     return cast_key<IdT>(data).find(id) == cast_key<IdT>(data).end();
   }
 
+  template<typename T>
+  inline bool isTooLong(T const& f, typename T::TimeT const& now)
+  {
+    if (T::timespan > 0) return now - f.t.back() > T::timespan;
+    else return f.t.size() > T::n_max;
+  }
+
   template<typename IdT>
   void newTrajectory(IdT const& id,
                      typename id_traits<IdT>::trajectory::StateT const& x_new,
@@ -197,7 +207,7 @@ struct Kernel
 
     typename dist_types<T>::distance_que& d = find(distances,id);
     d.push_front(typename dist_types<T>::distance_set()); // push empty distance_set onto deque
-    while( (t_new - f.t.back() > T::timespan || f.t.size() > T::n_max) && f.t.size() > T::n_min)
+    while (isTooLong(f,t_new) && f.t.size() > T::n_min)
     {
       //std::cout << "pop id " << id << std::endl;
       f.w.pop_back();
@@ -219,14 +229,14 @@ struct Kernel
     {
       T& f = it->second;
       typename dist_types<T>::distance_que& d = find(distances,it->first);
-      if (now - f.t.front() > 1)
+      if (now - f.t.front() > 0.1)
       {
         cast_key<typename T::IdT>(distances).erase(it->first);
         it = cast_value<T>(data).erase(it);
       }
       else
       {
-        while(!f.t.empty() && (now - f.t.back() > T::timespan || f.t.size() > T::n_max))
+        while (!f.t.empty() && isTooLong(f, now))
         {
           f.w.pop_back();
           f.t.pop_back();
@@ -257,9 +267,11 @@ struct Kernel
     assert(n==int(ids.size()));
   }
 
-  void computeKernelMatrixData(std::vector<float>& v_data, std::vector<int64_t>& v_ids)
+  void computeKernelMatrixData(std::vector<int64_t>& v_ids,
+                               std::vector<float>& v_data,
+                               std::vector<float>& v_dist)
   {
-    foreach_twice(data, MatrixCalculator(), distances, v_data);
+    foreach_twice(data, MatrixCalculator(), distances, v_data, v_dist);
     foreach_value(data, CopyIds<std::vector<int64_t> >(), v_ids);
   }
 

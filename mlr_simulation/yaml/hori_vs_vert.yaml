@@ -4,30 +4,30 @@ entities:
     pos: [[.01,.01],[.01,.01]]
     ext_high: [.8,.1]
     n: 20
-    noise: .0001
+    noise: .005
   - # background 1
     pos: [[.99,.99],[.99,.99]]
     ext_high: [-0.1,-0.8]
     n: 20
-    noise: .0001
+    noise: .005
   -
     pos: [[.1,.85],[.4,.85]]
     ext_high: [.1,.1]
     mp_pos: "sin"
     n: 3
-    noise: .0001
+    noise: .005
   -
     pos: [[.1,.85],[.1,.55]]
     ext_high: [.1,.1]
     mp_pos: "sin"
     n: 3
-    noise: .0001
+    noise: .005
   -
     pos: [[.1,.85],[.4,.55]]
     ext_high: [.1,.1]
     mp_pos: "sin"
     n: 3
-    noise: .0001
+    noise: .005
 
 
 world:

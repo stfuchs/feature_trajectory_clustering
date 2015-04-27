@@ -2,7 +2,7 @@
 
 import rospy
 import rosparam
-from mlr_msgs.msg import Point2dArray, ObjectIds
+from mlr_msgs.msg import Point2dArray, ObjectIds, SimControl
 from sensor_msgs.msg import Image
 from std_msgs.msg import Header, Bool
 import cv2
@@ -127,7 +127,7 @@ class Entity(object):
         self.a = self.A[ta0]+da
         self.R = np.mat([ [np.cos(self.a), -np.sin(self.a)],[np.sin(self.a),np.cos(self.a)] ])
         lp = list(self.points.T)
-        if self.init_mode is "seq":
+        if self.init_mode == "seq":
             if len(lp)>1 and np.random.rand() <= self.death/self.init_rate:
                 idx = int(np.random.rand()*len(lp))
                 del lp[idx]
@@ -135,7 +135,7 @@ class Entity(object):
             if np.random.rand() <= self.birth/self.init_rate:
                 self.ids.append(Newid().get())
                 lp.append(np.random.rand(2)*self.size+self.bb[:,0])
-        elif self.init_mode is "burst" and (self.update_count%self.init_rate) is 0:
+        elif self.init_mode == "burst" and (self.update_count%self.init_rate) is 0:
             n = len(lp)
             for i in range(int(np.ceil(self.death*n))):
                 idx = rnd_draw(range(len(lp)),1)[0]
@@ -167,16 +167,18 @@ class World(object):
     resolution: [640,480] # image resolution the above dimensions are scaled to
     """
 
-    def __init__(self, duration, rate=15, resolution=(640,480), terminate=False):
+    def __init__(self, duration, rate=10, resolution=(640,480), terminate=False):
         self.pub_image = rospy.Publisher("/camera/rgb/image_color",Image,queue_size=1)
         self.pub_points = rospy.Publisher("lk2d/points",Point2dArray,queue_size=1)
         self.pub_objects = rospy.Publisher("objects_truth",ObjectIds,queue_size=1)
         self.br = CvBridge()
-        self.duration = float(duration)
-        self.end = rospy.Time.now().to_sec()+self.duration
-        self.forward = lambda: 1.-(self.end - rospy.Time.now().to_sec())/self.duration
-        self.backward = lambda: (self.end - rospy.Time.now().to_sec())/self.duration
-        self.time = self.forward
+        #self.duration = float(duration)
+        #self.end = rospy.Time.now().to_sec()+self.duration
+        self.T = np.linspace(0,1.,duration*rate)
+        self.ti = 0
+        #self.forward = lambda: 1.-(self.end - rospy.Time.now().to_sec())/self.duration
+        #self.backward = lambda: (self.end - rospy.Time.now().to_sec())/self.duration
+        self.time = self.next
         self.rate = rospy.Rate(rate)
         self.inv_rate = 1./float(rate)
         self.resolution = resolution
@@ -185,6 +187,14 @@ class World(object):
         self.msg.scale_x = 1./self.resolution[0]
         self.msg.scale_y = 1./self.resolution[1]
         self.terminate = terminate
+
+    def next(self):
+        self.ti += 1
+        return self.ti
+
+    def prev(self):
+        self.ti -= 1
+        return self.ti
 
     def set_entities(self, ents):
         self.entities = ents
@@ -196,20 +206,20 @@ class World(object):
     def spin_once(self):
         img = np.ones([self.resolution[1],self.resolution[0],3],np.uint8)*255
         t = self.time()
-        if t >= 1.:
-            if self.terminate: exit()
-            self.end = rospy.Time.now().to_sec()+self.duration
-            self.time = self.backward
+        if t == len(self.T)-1:
+            if self.terminate: return True
+            #self.end = rospy.Time.now().to_sec()+self.duration
+            self.time = self.prev
             self.rate.sleep()
-            return
-        if t <= 0.:
-            self.end = rospy.Time.now().to_sec()+self.duration
-            self.time = self.forward
+            return False
+        if t <= 0:
+            #self.end = rospy.Time.now().to_sec()+self.duration
+            self.time = self.next
             self.rate.sleep()
-            return
+            return False
 
         for i, e in zip(self.ids,self.entities):
-            i.update(e.update(t).draw(img).ids)
+            i.update(e.update(self.T[t]).draw(img).ids)
         oid = ObjectIds()
 
         oid.header.stamp = rospy.Time.now()
@@ -232,14 +242,36 @@ class World(object):
 
 class Simulator(object):
     def __init__(self):
-        self.sub = rospy.Subscriber("reset_all", Bool, 
-                                    self.stop, queue_size=1)
-        self.has_stopped = True
+        self.sub = rospy.Subscriber("sim_control", SimControl, 
+                                    self.cb_control, queue_size=1)
         self.reconfigure()
+        print(self.mode)
 
     def run(self):
-        while not self.has_stopped and not rospy.is_shutdown():
-            self.world.spin_once()
+        while self.mode == "play" and not rospy.is_shutdown():
+            if self.world.spin_once():
+                print("Finished Simulation")
+                self.mode = "stop"
+
+    def cb_control(self, msg):
+        if msg.mode == "play":
+            print("Control: play")
+            if self.mode == "stop":
+                print("Trying reconfigure...")
+                self.reconfigure() # and play if successful
+            else:
+                self.mode = "play"
+        elif msg.mode == "pause":
+            print("Control: pause")
+            self.mode = "pause"
+        elif msg.mode == "next" and self.mode == "pause":
+            print("Control: next")
+            if self.world.spin_once():
+                self.mode = "stop"
+        elif msg.mode == "stop":
+            print("Control: stop")
+            self.mode = "stop"
+            
 
     def stop(self, msg):
         self.has_stopped = msg.data
@@ -252,7 +284,7 @@ class Simulator(object):
         except KeyError:
             print("could not find parameter: tracking/scenario on server")
             print("Waiting for reset message (/tracking/reset_all) ...")
-            self.has_stopped = True
+            self.mode = "stop"
             return
 
         try:
@@ -260,7 +292,7 @@ class Simulator(object):
         except rosparam.RosParamException:
             print("Failed to load %s" %yaml)
             print("Waiting for reset message (/tracking/reset_all) ...")
-            self.has_stopped = True
+            self.mode = "stop"
             return
         print("Loaded %s" %yaml)
         try:
@@ -270,7 +302,7 @@ class Simulator(object):
             print("Something seems wrong with the entities section of your yaml file:")
             print("\t%s"%e)
             print("Waiting for reset message (/tracking/reset_all) ...")
-            self.has_stopped = True
+            self.mode = "stop"
             return
         except TypeError as e:
             print("Couldn't instantiate entities.")
@@ -278,7 +310,7 @@ class Simulator(object):
             print("\t%s"%e)
             print(Entity.__doc__)
             print("Waiting for reset message (/tracking/reset_all) ...")
-            self.has_stopped = True
+            self.mode = "stop"
             return
         except:
             print(sys.exc_info())
@@ -292,7 +324,7 @@ class Simulator(object):
             print("Something seems wrong with the world section of your yaml file.")
             print("\t%s"%e)
             print("Waiting for reset message (/tracking/reset_all) ...")
-            self.has_stopped = True
+            self.mode = "stop"
             return
         except TypeError as e:
             print("Couldn't instantiate simulation.")
@@ -300,13 +332,13 @@ class Simulator(object):
             print("\t%s"%e)
             print(World.__doc__)
             print("Waiting for reset message (/tracking/reset_all) ...")
-            self.has_stopped = True
+            self.mode = "stop"
             return
         except:
             print(sys.exc_info())
             raise
 
-        self.has_stopped = False
+        self.mode = "play"
         print("Simulator creation successful.")
         print("Default output points [mlr_msgs::Point2dArray], topic is: tracking/lk2d/points")
         print("Default output images [sensor_msgs::Image], topic is: camera/rgb/image_color")

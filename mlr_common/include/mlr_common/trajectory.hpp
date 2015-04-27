@@ -121,7 +121,7 @@ struct trajectory_type_promotion<T,T>
 template<>
 struct trajectory_type_promotion<PointTraits,PoseTraits>
 {
-  typedef  double res_distance_type;
+  typedef double res_distance_type;
   typedef typename PointTraits::TimeT res_time_type;
   typedef typename PointTraits::StateT res_state_type;
 };
@@ -149,7 +149,6 @@ struct trajectory_policy
                                    typename T2::StateT const& xj)
   {
     return (xi - xj).squaredNorm();
-    return (xi - xj).norm();
   }
 
   inline static StateT lin_inter(typename T1::StateT const& x1,

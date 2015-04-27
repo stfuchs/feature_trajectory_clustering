@@ -21,15 +21,20 @@ class dumper(object):
     def listen(self, kernel):
         if (rospy.Time.now() - self.last).to_sec() >= self.inter:
             self.last = rospy.Time.now()
-            K = symmetric(kernel.data,len(kernel.ids))
             idx = np.argsort(np.array(kernel.ids))
+            K = symmetric(kernel.data,len(kernel.ids))
             K = K[:,idx]
             K = K[idx,:]
-            fname = "kernel%05d.npy"%self.count
+            X = symmetric(kernel.distances,len(kernel.ids))
+            X = X[:,idx]
+            X = X[idx,:]
+            fname1 = "kernel%05d.npy"%self.count
+            fname2 = "distances%05d.npy"%self.count
             self.count += 1
             #fname = "kernel_%s.npy"%rospy.Time.now().to_nsec()
-            np.save(self.out+fname, K)
-            print("Saved to %s"%fname)
+            np.save(self.out+fname1, K)
+            np.save(self.out+fname2, X)
+            print("Saved to %s"%fname1)
 
 if __name__ == '__main__':
     import sys

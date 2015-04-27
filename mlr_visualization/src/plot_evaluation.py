@@ -91,7 +91,7 @@ if __name__=='__main__':
                      help="define optional output file (.npy), else to topic")
     opt.add_argument("remainder",nargs='*')
     args = opt.parse_args()
-    
+
     rospy.init_node('evaluate_node')
     node = EvalNode(args.labels,args.out)
     if node.ok:

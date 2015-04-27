@@ -19,12 +19,12 @@
   <node name="extract" pkg="image_view" type="extract_images" respawn="false" output="screen">
     <remap from="image" to="/tracking/lk2d/image"/>
     <param name="filename_format" value="$(arg out)frame%04i.png"/>
-    <param name="sec_per_frame" value="0.5"/>
+    <param name="sec_per_frame" value="0.1"/>
   </node>
   <node name="eval" pkg="mlr_visualization" type="plot_evaluation.py"
         args="--out $(arg out)results.npy" respawn="false" output="screen">
   </node>
   <node name="dump_kernel" pkg="python_doodles" type="dump_kernel.py"
-        args="0.5 $(arg out)" respawn="false" output="screen">
+        args="0.1 $(arg out)" respawn="false" output="screen">
   </node>
 </launch>

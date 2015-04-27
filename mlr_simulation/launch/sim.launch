@@ -1,11 +1,12 @@
 <launch>
+  <arg name="sig" default="0.01"/>
+  <arg name="vel" default="0.05"/>
+  <arg name="span" default="0.0"/>
+
   <group ns="tracking">
-    <!-- set the timespan in seconds when to dump old meassurements -->
-    <param name="kernel/timespan" type="double" value="10.0"/>
-    <!-- velocity to indicate full motion, every thing below gets less weight -->
-    <param name="kernel/vel09" type="double" value="0.09"/>
-    <!-- standard deviation of distances to switch between high and low affinity -->
-    <param name="kernel/sig05" type="double" value="0.01"/>
+    <param name="kernel/timespan" type="double" value="$(arg span)"/>
+    <param name="kernel/vel09" type="double" value="$(arg vel)"/>
+    <param name="kernel/sig05" type="double" value="$(arg sig)"/>
 
     <node name="sim" pkg="mlr_simulation" type="simulation2d.py" output="screen"/>
     <node name="kernel" pkg="mlr_clustering" type="lk2d_kernel_node" output="screen"/>
@@ -15,5 +16,8 @@
   </group>
   <node name="eval" pkg="mlr_visualization" type="plot_evaluation.py"
         respawn="false" output="screen">
+  </node>
+  <node name="eigen_info" pkg="mlr_visualization" type="plot_eigen_info.py"
+        output="screen">
   </node>
 </launch>
