@@ -17,8 +17,9 @@
   <node name="eigen_info" pkg="mlr_visualization" type="plot_eigen_info.py"
         output="screen">
   </node>
-  <node name="evaluation" pkg="mlr_visualization" type="plot_evaluation.py"
-        args="--labels $(arg labels)"
-        respawn="false" output="screen">
-  </node>
+  
+  <!-- node name="evaluation" pkg="mlr_visualization" type="plot_evaluation.py"
+        args="- -labels $(arg labels)" output="screen">
+  </node -->
+  
 </launch>

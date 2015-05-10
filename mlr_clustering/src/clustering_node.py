@@ -53,20 +53,25 @@ class DivisiveKMeans:
     def recursive(self, K, idx):
         A = K[np.ix_(idx,idx)].copy() # get submatrix for all idx
 
-        L = np.diag(np.sum(A,axis=0)) - A # graph laplacian
-        e,E = np.linalg.eig(L)
-        v2 = (E[:,np.argsort(e)])[:,1] # second eigenvector
-
         if A.min() > .4:
             return
 
-        W = self.W[np.ix_(idx,idx)].copy()
-        D = np.diag(1./np.sum(W,axis=0))
-        V = np.exp(-self.beta*v2*v2)
-        v = V*(D.dot(W).dot(v2)) + (1.-V)*v2
+        L = np.diag(np.sum(A,axis=0)) - A # graph laplacian
+        e,E = np.linalg.eig(L)
+        v = (E[:,np.argsort(e)])[:,1] # second eigenvector
+
+        #vidx = np.argsort(v)
+        #dv = np.diff(v[vidx])
+        #split = v[vidx[np.argmax(dv)]]
+        split = 0
+
+        #W = self.W[np.ix_(idx,idx)].copy()
+        #D = np.diag(1./np.sum(W,axis=0))
+        #V = np.exp(-self.beta*v2*v2)
+        #v = V*(D.dot(W).dot(v2)) + (1.-V)*v2
 
         lnew = -np.ones_like(self.l_)
-        lnew[idx] = (v>0).astype(int)
+        lnew[idx] = (v>split).astype(int)
         idx1 = np.where(lnew==0)[0]
         idx2 = np.where(lnew==1)[0]
         self.l_[idx2] = self.lmax_.next()
@@ -165,16 +170,6 @@ class ClusteringNode:
     def getLabels(self, ids):
         return [ np.argmax(self.probs[i]) for i in ids ]
 
-    def PCA(self,K):
-        pca = PCA(n_components=.999)
-        Kp = pca.fit(K).transform(K)
-        if pca.explained_variance_ratio_[0] < 2./K.shape[0]:
-            print("Something is wrong with the kernel matrix. PCA:\n%s"
-                  % pca.explained_variance_ratio_)
-            print("Skip this one.")
-            return False,Kp
-        return True,Kp
-
     def lk_callback(self,kernel_state):
         np.set_printoptions(precision=5, suppress=True)
         if kernel_state.header.stamp.to_sec() < self.last_header.stamp.to_sec():
@@ -188,39 +183,22 @@ class ClusteringNode:
         W = symmetric(kernel_state.distances,n,diag=0)
         alpha = -np.log(0.5)/(1.**2)
         W = np.exp(-alpha*W)
-        pca_success = False
         Kp = K
-        #pca_success, Kp = self.PCA(K)
-        #if not pca_success: return
 
         start = rospy.Time.now()
-        k = range(max(1,self.k_last-1), self.k_last+2)
-        #gmm = [ GMM(n_components=ki, covariance_type='full').fit(Kp) for ki in k ]
-        #gmm = [ GMM(n_components=ki, covariance_type='diag').fit(Kp) for ki in k ]
-        #gmm = [ GMM(n_components=ki, covariance_type='spherical').fit(Kp) for ki in k ]
-        #bic = [ gmmi.bic(Kp) for gmmi in gmm ]
-        #print("BIC: %s, %s" % (k,bic))
-        #idx = np.argmin(bic)
-        #self.k_last = k[idx]
 
-        hkm = HierarchicalKMeans(term=1.).fit(K)
-        #hkm = DivisiveKMeans(W).fit(K)
-        #print("KMeans: %s" % hkm.score_)
+        #hkm = HierarchicalKMeans(term=1.).fit(K)
+        hkm = DivisiveKMeans(W).fit(K)
         self.k_last = hkm.k_
-        #print("rKMeans:\n%s" % recursiveKMeans(K,np.zeros(n,np.int),range(n)))
 
         if self.k_last > self.k:
             self.k = self.k_last
-            #if k > 2: self.gamma = .5
-            #else: self.gamma = .8
             self.gamma = .99
             self.transition = np.ones([self.k,self.k])*(1.-self.gamma)/(self.k-1.)
             self.transition[np.diag_indices_from(self.transition)] = self.gamma
 
-        #print("cluster: %s, reduction: %s,%s" % (k[idx],Kp.shape[0],Kp.shape[1]))
 
         Z = np.ones([n,self.k])*.0001
-        #Z[:,:self.k_last = gmm[idx].predict_proba(Kp)
         Z[:,:self.k_last] += hkm.proba_
         Z = np.vstack(map(lambda zi: zi/np.sum(zi), Z))
 

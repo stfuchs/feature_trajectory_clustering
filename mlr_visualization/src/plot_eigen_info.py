@@ -60,10 +60,16 @@ def symmetric(arr, n, diag=1.):
     return M+M.T+np.diag(np.ones(n,dtype=np.float32)*diag)
 
 class HierarchicalKMeans:
+    def __init__(self, W, v=0.01):
+        self.W = W
+        self.beta = -np.log(0.5)/(v**2)
+
     def fit(self, K):
         n = K.shape[0]
         self.l_ = np.zeros(n,int)
         self.lmax_ = itertools.count(1)
+        self.v_ = []
+        self.v2_ = []
         self.recursive(K, range(n))
         self.k_ = self.lmax_.next()
         return self
@@ -73,8 +79,25 @@ class HierarchicalKMeans:
         if A.min() > .4:
             return
 
+        L = np.diag(np.sum(A,axis=0)) - A # graph laplacian
+        e,E = np.linalg.eig(L)
+        v = (E[:,np.argsort(e)])[:,1] # second eigenvector
+        vidx = argsort(v)
+        W = self.W[np.ix_(idx,idx)].copy()
+        W = (W.T*exp(-self.beta*v*v)).T
+        Lw = np.diag(np.sum(W,axis=0)) - W
+        e,E = np.linalg.eig(Lw)
+        v2 = (E[:,np.argsort(e)])[:,1]
+        
+        self.v_.append(v[vidx])
+        self.v2_.append(v2[vidx])
+        #dv = diff(v[vidx])
+        #split = v[vidx[argmax(dv)]]
+        split = 0
+
         lnew = -np.ones_like(self.l_)
-        lnew[idx] = KMeans(2).fit_predict(A)
+        #lnew[idx] = KMeans(2).fit_predict(A)
+        lnew[idx] = (v>split).astype(int)
         idx1 = np.where(lnew==0)[0]
         idx2 = np.where(lnew==1)[0]
         self.l_[idx2] = self.lmax_.next()
@@ -96,15 +119,21 @@ class PlotNode(object):
 
         n = len(msg.ids)
         K = mat(symmetric(msg.data,n))
-        X = exp(-alpha*mat(symmetric(msg.distances,n,diag=0)))
+        #X = exp(-alpha*mat(symmetric(msg.distances,n,diag=0)))
+        X = symmetric(msg.distances,n,diag=0)
+        #min_idx = argsort(X,axis=1)
+        #x_idx = indices(X.shape)
+        #Xnn = zeros_like(X)
+        #Xnn[x_idx[0,:,:10],min_idx[:,:10]] = 1.
+        X = exp(-alpha*mat(X))
         #l = KMeans(2).fit_predict(K)
-        hkm = HierarchicalKMeans().fit(K)
+        hkm = HierarchicalKMeans(array(X)).fit(array(K))
         l = hkm.l_
         klen = histogram(l,hkm.k_)[0]
         D = mat(diag(sum(array(K),axis=0)))
         I = identity(n)
-        L = array(I - D.I*K)
-        #L = array(D - K)
+        #L = array(I - D.I*K)
+        L = array(D - K)
         try:
             w,V = linalg.eig(L)
             eidx = argsort(w)
@@ -122,8 +151,8 @@ class PlotNode(object):
         
         fig = figure(1,figsize=(fig_width,fig_width*float(nrows)/float(ncols)))
         gs_top = gridspec.GridSpec(nrows,ncols)
-        ax00 = fig.add_subplot(gs_top[0,:])
-        #ax01 = fig.add_subplot(gs_top[0,1])
+        ax00 = fig.add_subplot(gs_top[0,0])
+        ax01 = fig.add_subplot(gs_top[0,1])
         ax10 = fig.add_subplot(gs_top[1,0])
         ax11 = fig.add_subplot(gs_top[1,1])
 
@@ -140,13 +169,25 @@ class PlotNode(object):
         ax11.set_yticklabels(klen)
 
         
-        for i in range(hkm.k_):
-            lidx = where(l==i)[0]
-            ax00.plot(v1[lidx],v2[lidx], 'o',c=html(*cp[i]))
+        #for i in range(hkm.k_):
+            #lidx = where(l==i)[0]
+            #ax00.plot(v1[lidx],v2[lidx], 'o',c=html(*cp[i]))
+            #ax01.plot(v1[lidx],v2[lidx], 'o',c=html(*cp[i]))
+        #for v1i,v2i,i in zip(hkm.v_,hkm.v2_,range(len(hkm.v_))):
+        if len(hkm.v_) > 0:
+            idx = range(len(hkm.v_[0]))
+            ax00.plot(idx, hkm.v_[0], 'o-',c=html(*cp[1]))
+            ax00.plot(idx, hkm.v2_[0], 'o--',c=html(*cp[0]))
+        if len(hkm.v_) > 1:
+            idx = range(len(hkm.v_[1]))
+            ax01.plot(idx, hkm.v_[1], 'o-',c=html(*cp[3]))
+            ax01.plot(idx, hkm.v2_[1], 'o--',c=html(*cp[2]))
 
-        #ax00.set_xlim([-.6,.6])
-        #ax00.set_ylim([-.6,.6])
+        #ax01.set_xlim([-.1,len(hkm.v_)-1.+.1])
+        ax00.set_ylim([-.2,.2])
+        ax01.set_ylim([-.2,.2])
         ax00.grid()
+        ax01.grid()
         #ax01.plot(v3[l0],v4[l0], '+',c=html(*cp[1]))
         #ax01.plot(v3[l1],v4[l1], 'x',c=html(*cp[0]))
         #ax01.set_xlim([-.6,.6])
