@@ -59,6 +59,11 @@ class DivisiveKMeans:
         L = np.diag(np.sum(A,axis=0)) - A # graph laplacian
         e,E = np.linalg.eig(L)
         v = (E[:,np.argsort(e)])[:,1] # second eigenvector
+        vidx0 = np.where(abs(v)<0.01)[0]
+        vidx1 = np.where(v>=0.01)[0]
+        self.l_[vidx0] = self.lmax_.next()
+        self.l_[vidx1] = self.lmax_.next()
+        return
 
         #vidx = np.argsort(v)
         #dv = np.diff(v[vidx])
@@ -75,7 +80,7 @@ class DivisiveKMeans:
         idx1 = np.where(lnew==0)[0]
         idx2 = np.where(lnew==1)[0]
         self.l_[idx2] = self.lmax_.next()
-
+        return
         if len(idx1) > 1: self.recursive(K, idx1)
         if len(idx2) > 1: self.recursive(K, idx2)
 
